@@ -114,8 +114,9 @@ function requireTeamAuth(req, res, next) {
   const isOwner = team.owner === req.userEmail;
   const isMember = team.members && team.members.includes(req.userEmail);
   const isAdmin = ADMIN_EMAILS.includes(req.userEmail);
+  const isLegacyPublic = !team.owner && !team.password;
 
-  if (!isOwner && !isMember && !isAdmin) {
+  if (!isOwner && !isMember && !isAdmin && !isLegacyPublic) {
     if (team.password && team.password !== req.headers['x-team-password']) {
       return res.status(401).json({ error: "Unauthorized: Incorrect Team Password", isLocked: true });
     }
@@ -131,16 +132,28 @@ function requireTeamAuth(req, res, next) {
 // --- Teams API ---
 router.get("/api/teams", (req, res) => {
   const isAdmin = ADMIN_EMAILS.includes(req.userEmail);
-  const publicTeams = teamService.getAllTeams().map(t => {
-    const hasAclAccess = isAdmin || t.owner === req.userEmail || (t.members && t.members.includes(req.userEmail));
-    return {
+  const allTeams = teamService.getAllTeams();
+  
+  const publicTeams = [];
+  for (const t of allTeams) {
+    const isOwner = t.owner === req.userEmail;
+    const isMember = t.members && t.members.includes(req.userEmail);
+    const hasAclAccess = isAdmin || isOwner || isMember;
+    const isLegacyPublic = !t.owner && !t.password;
+    
+    // Hide strictly private teams (no password, no access)
+    if (!hasAclAccess && !isLegacyPublic && !t.password) {
+      continue;
+    }
+    
+    publicTeams.push({
       id: t.id,
       name: t.name,
-      isLocked: hasAclAccess ? false : !!t.password,
+      isLocked: (hasAclAccess || isLegacyPublic) ? false : !!t.password,
       hasSheet: !!t.googleSheetCsvUrl,
       owner: t.owner
-    };
-  });
+    });
+  }
   res.json({ ok: true, teams: publicTeams, isAdmin });
 });
 
