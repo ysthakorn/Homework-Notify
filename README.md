@@ -15,7 +15,9 @@
 
 ## ✨ Features
 
+- 💻 **Developer-focused UI** — หน้าตา Dashboard แบบ Dark Theme (Coolify-inspired) พร้อม Sidebar Navigation รองรับมือถือ
 - 📋 **Dashboard** — ส่งข้อความแจ้งเตือนการบ้านผ่านฟอร์ม หรือเลือกจาก Google Sheet
+- ⚙️ **Web-based Env Editor** — แก้ไขค่าตั้งค่า (`.env`) ได้จากหน้าเว็บโดยตรง ไม่ต้องแก้ไฟล์เอง
 - 📊 **Google Sheet Integration** — โหลดรายการจาก Sheet พร้อมปุ่ม "ส่งแถวนี้" สำหรับทุกแถว
 - 💬 **LINE Push Message** — ส่งข้อความเข้า LINE Group ผ่าน Messaging API
 - 📅 **รองรับปี พ.ศ.** — แปลง พ.ศ. (> 2400) → ค.ศ. อัตโนมัติ
@@ -37,6 +39,7 @@
     ├── routes/
     │   └── notifyRoutes.js  # All route handlers
     ├── services/
+    │   ├── envService.js    # อ่าน/เขียนไฟล์ .env
     │   ├── lineClient.js    # LINE Messaging API client (push)
     │   ├── messageBuilder.js # สร้างข้อความแจ้งเตือน + parse วันที่
     │   └── sheetService.js  # โหลด & parse CSV จาก Google Sheet
@@ -48,6 +51,7 @@
         └── assets/
             ├── styles.css   # Stylesheet
             ├── dashboard.js # Dashboard logic
+            ├── setup.js     # Env editor logic
             └── status.js    # Status page logic
 ```
 
@@ -63,7 +67,9 @@ npm install
 
 ### 2. Configure environment variables
 
-สร้างไฟล์ `.env` จาก `.env.example`:
+คุณสามารถตั้งค่าได้ 2 วิธี:
+1. **ผ่านหน้าเว็บ (แนะนำ)** — รันเซิร์ฟเวอร์ก่อน แล้วไปที่หน้า `/setup` เพื่อกรอกค่าผ่าน UI (บันทึกแล้วระบบจะสร้าง/อัปเดตไฟล์ `.env` ให้อัตโนมัติและใช้งานได้ทันที)
+2. **สร้างไฟล์ `.env` เอง** — คัดลอกไฟล์ `.env.example` เป็น `.env` แล้วแก้ไขค่า:
 
 | Variable | Description | Default |
 |---|---|---|
@@ -182,6 +188,37 @@ subject,title,detail,date
 ```json
 { "hasGoogleSheet": true }
 ```
+
+### `GET /api/env`
+
+```json
+{
+  "ok": true,
+  "values": {
+    "LINE_ACCESS_TOKEN": "...",
+    "LINE_GROUP_ID": "...",
+    "PORT": "8080",
+    "LINE_REQUEST_TIMEOUT_SEC": "10",
+    "GOOGLE_SHEET_CSV_URL": "..."
+  }
+}
+```
+
+### `PUT /api/env`
+
+**Request body:**
+
+```json
+{
+  "LINE_ACCESS_TOKEN": "NEW_TOKEN",
+  "LINE_GROUP_ID": "NEW_GROUP",
+  "PORT": "8080",
+  "LINE_REQUEST_TIMEOUT_SEC": "10",
+  "GOOGLE_SHEET_CSV_URL": "..."
+}
+```
+
+**Response:** `{ "ok": true }`
 
 ### `GET /api/sheet-rows`
 
