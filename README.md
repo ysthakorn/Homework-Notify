@@ -113,7 +113,7 @@ npm run dev
 | Path | Description |
 |---|---|
 | `/` | 📋 Dashboard — ฟอร์มส่งการบ้าน + ตาราง Google Sheet |
-| `/setup` | ⚙️ Setup guide |
+| `/setup` | ⚙️ Setup — แก้ไข .env ได้จากหน้าเว็บ |
 | `/docs` | 📖 API documentation |
 | `/status` | 📊 System status |
 
@@ -163,6 +163,8 @@ subject,title,detail,date
 |---|---|---|
 | `GET` | `/health` | Health check |
 | `GET` | `/api/config` | ดึง config (เช่น มี Google Sheet หรือไม่) |
+| `GET` | `/api/env` | อ่านค่า .env ปัจจุบัน |
+| `PUT` | `/api/env` | เขียนค่า .env ใหม่ (reload ทันที) |
 | `GET` | `/api/sheet-rows` | โหลดแถวจาก Google Sheet CSV |
 | `POST` | `/notify` | ส่งข้อความแจ้งเตือนการบ้านไปยัง LINE Group |
 | `POST` | `/notify-row` | ส่งแถวที่เลือกจาก Sheet ไปยัง LINE Group |

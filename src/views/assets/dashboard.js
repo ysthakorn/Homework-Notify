@@ -9,7 +9,7 @@ let sheetData = [];
 
 function setStatus(el, text, isError = false) {
   el.textContent = text;
-  el.style.color = isError ? '#d94f4f' : '#1f7a44';
+  el.style.color = isError ? '#ef4444' : '#22c55e';
 }
 
 async function requestJson(url, options = {}) {

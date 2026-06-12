@@ -3,72 +3,105 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>HW Notifier Setup</title>
+  <title>HW Notifier · Setup</title>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/assets/styles.css">
 </head>
 <body>
-  <div class="container">
-    <nav class="nav">
-      <div class="brand">HW Notifier</div>
-      <div class="nav-links">
-        <a class="nav-link" href="/">Dashboard</a>
-        <a class="nav-link is-active" href="/setup">Setup</a>
-        <a class="nav-link" href="/docs">API Docs</a>
-        <a class="nav-link" href="/status">Status</a>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="sidebar-logo">HW</div>
+        <span class="sidebar-name">HW Notifier</span>
       </div>
-    </nav>
+      <nav class="sidebar-nav">
+        <a class="sidebar-link" href="/">
+          <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          Dashboard
+        </a>
+        <a class="sidebar-link is-active" href="/setup">
+          <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Setup
+        </a>
+        <a class="sidebar-link" href="/docs">
+          <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          API Docs
+        </a>
+        <a class="sidebar-link" href="/status">
+          <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Status
+        </a>
+      </nav>
+      <div class="sidebar-footer">v1.0.0 · Node.js + Express</div>
+    </aside>
 
-    <section class="hero">
-      <h1>Setup Guide</h1>
-      <p>ขั้นตอนตั้งค่า .env และเชื่อมต่อ LINE + Google Sheet ให้พร้อมใช้งาน</p>
-      <div class="meta">
-        <span class="pill">Env Config</span>
-        <span class="pill">LINE Token</span>
-        <span class="pill">CSV Export</span>
+    <div class="mobile-nav">
+      <a href="/">Dashboard</a>
+      <a class="is-active" href="/setup">Setup</a>
+      <a href="/docs">API Docs</a>
+      <a href="/status">Status</a>
+    </div>
+
+    <main class="main">
+      <div class="page-header">
+        <h1>Setup</h1>
+        <p>ตั้งค่า environment variables ได้จากหน้านี้โดยตรง — บันทึกแล้วมีผลทันที</p>
       </div>
-    </section>
 
-    <section class="section">
-      <article class="card">
-        <h2>1) สร้างไฟล์ .env</h2>
-        <div class="code-block">
-LINE_ACCESS_TOKEN="YOUR_TOKEN_HERE"
-LINE_GROUP_ID="YOUR_GROUP_ID_HERE"
-PORT="8080"
-LINE_REQUEST_TIMEOUT_SEC="10"
-GOOGLE_SHEET_CSV_URL="https://docs.google.com/spreadsheets/d/&lt;SHEET_ID&gt;/export?format=csv&amp;gid=0"
+      <div class="section-gap">
+        <!-- Env Editor -->
+        <div class="card">
+          <form id="envForm">
+            <div class="panel-title">
+              <div class="card-title" style="margin-bottom:0">
+                Environment Variables
+                <small>.env</small>
+              </div>
+              <div style="display:flex;gap:8px;align-items:center">
+                <span class="status-msg" id="envStatus"></span>
+                <button type="submit" class="btn-success">Save</button>
+              </div>
+            </div>
+            <div id="envFields" class="env-fields">
+              <div class="muted" style="padding:12px 0">กำลังโหลด...</div>
+            </div>
+          </form>
         </div>
-        <p class="muted">ถ้าไม่ใช้ Google Sheet สามารถเว้น GOOGLE_SHEET_CSV_URL ได้ ระบบยังส่งแบบ manual ได้ตามปกติ</p>
-      </article>
 
-      <div class="section-grid">
-        <article class="card">
-          <h2>2) สร้าง LINE Access Token</h2>
-          <ul class="list">
-            <li>เปิด LINE Developers และสร้าง Provider</li>
-            <li>สร้าง Messaging API Channel</li>
-            <li>คัดลอก Channel Access Token (Long-lived)</li>
-          </ul>
-        </article>
-        <article class="card">
-          <h2>3) หา Group ID</h2>
-          <ul class="list">
-            <li>เพิ่มบอทเข้ากลุ่ม LINE</li>
-            <li>ส่งข้อความเพื่อรับ webhook event</li>
-            <li>ดึง groupId จาก event payload</li>
-          </ul>
-        </article>
-        <article class="card">
-          <h2>4) Google Sheet CSV</h2>
-          <ul class="list">
-            <li>แชร์ชีตเป็นสาธารณะ (อ่านได้)</li>
-            <li>ใช้ URL export เป็น CSV</li>
-            <li>ตรวจคอลัมน์ให้ตรงชื่อที่รองรับ</li>
-          </ul>
-        </article>
+        <!-- Guide -->
+        <div class="card">
+          <div class="card-title">วิธีขอ Token และ Group ID</div>
+          <div class="grid-auto">
+            <div>
+              <strong style="font-size:0.82rem;color:var(--ink-secondary)">LINE Access Token</strong>
+              <ul class="list">
+                <li>เปิด LINE Developers และสร้าง Provider</li>
+                <li>สร้าง Messaging API Channel</li>
+                <li>คัดลอก Channel Access Token (Long-lived)</li>
+              </ul>
+            </div>
+            <div>
+              <strong style="font-size:0.82rem;color:var(--ink-secondary)">Group ID</strong>
+              <ul class="list">
+                <li>เพิ่มบอทเข้ากลุ่ม LINE</li>
+                <li>ส่งข้อความเพื่อรับ webhook event</li>
+                <li>ดึง groupId จาก event payload</li>
+              </ul>
+            </div>
+            <div>
+              <strong style="font-size:0.82rem;color:var(--ink-secondary)">Google Sheet CSV</strong>
+              <ul class="list">
+                <li>แชร์ชีตเป็นสาธารณะ (อ่านได้)</li>
+                <li>ใช้ URL export เป็น CSV</li>
+                <li>ตรวจคอลัมน์ให้ตรงชื่อที่รองรับ</li>
+              </ul>
+            </div>
+          </div>
+        </div>
       </div>
-    </section>
+    </main>
   </div>
+
+  <script src="/assets/setup.js"></script>
 </body>
 </html>

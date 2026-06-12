@@ -3,115 +3,131 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>HW Notifier API Docs</title>
+  <title>HW Notifier · API Docs</title>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/assets/styles.css">
 </head>
 <body>
-  <div class="container">
-    <nav class="nav">
-      <div class="brand">HW Notifier</div>
-      <div class="nav-links">
-        <a class="nav-link" href="/">Dashboard</a>
-        <a class="nav-link" href="/setup">Setup</a>
-        <a class="nav-link is-active" href="/docs">API Docs</a>
-        <a class="nav-link" href="/status">Status</a>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="sidebar-logo">HW</div>
+        <span class="sidebar-name">HW Notifier</span>
       </div>
-    </nav>
+      <nav class="sidebar-nav">
+        <a class="sidebar-link" href="/">
+          <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          Dashboard
+        </a>
+        <a class="sidebar-link" href="/setup">
+          <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Setup
+        </a>
+        <a class="sidebar-link is-active" href="/docs">
+          <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          API Docs
+        </a>
+        <a class="sidebar-link" href="/status">
+          <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Status
+        </a>
+      </nav>
+      <div class="sidebar-footer">v1.0.0 · Node.js + Express</div>
+    </aside>
 
-    <section class="hero">
-      <h1>API Docs</h1>
-      <p>รายการ endpoint และตัวอย่าง payload สำหรับเรียกใช้งานระบบ</p>
-      <div class="meta">
-        <span class="pill">REST</span>
-        <span class="pill">JSON</span>
-        <span class="pill">LINE Notify</span>
+    <div class="mobile-nav">
+      <a href="/">Dashboard</a>
+      <a href="/setup">Setup</a>
+      <a class="is-active" href="/docs">API Docs</a>
+      <a href="/status">Status</a>
+    </div>
+
+    <main class="main">
+      <div class="page-header">
+        <h1>API Docs</h1>
+        <p>รายการ endpoint และตัวอย่าง payload สำหรับเรียกใช้งานระบบ</p>
       </div>
-    </section>
 
-    <section class="section">
-      <article class="card">
-        <h2>Endpoints</h2>
-        <table class="table-plain">
-          <thead>
-            <tr>
-              <th>Method</th>
-              <th>Path</th>
-              <th>คำอธิบาย</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><span class="badge">GET</span></td>
-              <td>/</td>
-              <td>หน้า Dashboard</td>
-            </tr>
-            <tr>
-              <td><span class="badge">GET</span></td>
-              <td>/setup</td>
-              <td>หน้า Setup Guide</td>
-            </tr>
-            <tr>
-              <td><span class="badge">GET</span></td>
-              <td>/docs</td>
-              <td>หน้า API Docs</td>
-            </tr>
-            <tr>
-              <td><span class="badge">GET</span></td>
-              <td>/status</td>
-              <td>หน้า Status</td>
-            </tr>
-            <tr>
-              <td><span class="badge">GET</span></td>
-              <td>/api/config</td>
-              <td>เช็คว่าตั้งค่า Google Sheet แล้วหรือยัง</td>
-            </tr>
-            <tr>
-              <td><span class="badge">GET</span></td>
-              <td>/api/sheet-rows</td>
-              <td>ดึงแถวข้อมูลจาก Google Sheet CSV</td>
-            </tr>
-            <tr>
-              <td><span class="badge">POST</span></td>
-              <td>/notify</td>
-              <td>ส่งข้อความจาก payload แบบ manual</td>
-            </tr>
-            <tr>
-              <td><span class="badge">POST</span></td>
-              <td>/notify-row</td>
-              <td>ส่งข้อความจากแถวในชีต</td>
-            </tr>
-            <tr>
-              <td><span class="badge">GET</span></td>
-              <td>/health</td>
-              <td>health check</td>
-            </tr>
-          </tbody>
-        </table>
-      </article>
+      <div class="section-gap">
+        <div class="card">
+          <div class="card-title">Endpoints</div>
+          <table class="table-plain">
+            <thead>
+              <tr>
+                <th>Method</th>
+                <th>Path</th>
+                <th>คำอธิบาย</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="badge badge-get">GET</span></td>
+                <td>/</td>
+                <td>หน้า Dashboard</td>
+              </tr>
+              <tr>
+                <td><span class="badge badge-get">GET</span></td>
+                <td>/setup</td>
+                <td>หน้า Setup Guide</td>
+              </tr>
+              <tr>
+                <td><span class="badge badge-get">GET</span></td>
+                <td>/docs</td>
+                <td>หน้า API Docs</td>
+              </tr>
+              <tr>
+                <td><span class="badge badge-get">GET</span></td>
+                <td>/status</td>
+                <td>หน้า Status</td>
+              </tr>
+              <tr>
+                <td><span class="badge badge-get">GET</span></td>
+                <td>/api/config</td>
+                <td>เช็คว่าตั้งค่า Google Sheet แล้วหรือยัง</td>
+              </tr>
+              <tr>
+                <td><span class="badge badge-get">GET</span></td>
+                <td>/api/sheet-rows</td>
+                <td>ดึงแถวข้อมูลจาก Google Sheet CSV</td>
+              </tr>
+              <tr>
+                <td><span class="badge badge-post">POST</span></td>
+                <td>/notify</td>
+                <td>ส่งข้อความจาก payload แบบ manual</td>
+              </tr>
+              <tr>
+                <td><span class="badge badge-post">POST</span></td>
+                <td>/notify-row</td>
+                <td>ส่งข้อความจากแถวในชีต</td>
+              </tr>
+              <tr>
+                <td><span class="badge badge-get">GET</span></td>
+                <td>/health</td>
+                <td>Health check</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
-      <div class="section-grid">
-        <article class="card">
-          <h2>Payload: /notify</h2>
-          <div class="code-block">
-{
+        <div class="grid-auto">
+          <div class="card">
+            <div class="card-title">Payload: /notify</div>
+            <div class="code-block">{
   "subject": "Operating Systems",
   "title": "Quiz",
   "detail": "Chapter 4",
   "due": "2026-05-29T18:00"
-}
+}</div>
           </div>
-        </article>
-        <article class="card">
-          <h2>cURL Example</h2>
-          <div class="code-block">
-curl -X POST http://localhost:8080/notify \
+          <div class="card">
+            <div class="card-title">cURL Example</div>
+            <div class="code-block">curl -X POST http://localhost:8080/notify \
   -H "Content-Type: application/json" \
-  -d '{"subject":"OS","title":"Quiz","detail":"Chapter 4","due":"2026-05-29T18:00"}'
+  -d '{"subject":"OS","title":"Quiz","detail":"Ch 4","due":"2026-05-29T18:00"}'</div>
           </div>
-        </article>
+        </div>
       </div>
-    </section>
+    </main>
   </div>
 </body>
 </html>

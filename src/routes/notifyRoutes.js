@@ -4,6 +4,7 @@ const path = require("path");
 const { buildHomeworkMessage } = require("../services/messageBuilder");
 const { pushTextMessage } = require("../services/lineClient");
 const { fetchHomeworkRows } = require("../services/sheetService");
+const { readEnv, writeEnv } = require("../services/envService");
 const env = require("../config/env");
 
 const router = express.Router();
@@ -32,6 +33,26 @@ router.get("/api/config", (req, res) => {
   res.json({
     hasGoogleSheet: Boolean(env.googleSheetCsvUrl),
   });
+});
+
+router.get("/api/env", (req, res) => {
+  try {
+    const values = readEnv();
+    res.json({ ok: true, values });
+  } catch (error) {
+    return res.status(500).json({ error: error.message || "failed_to_read_env" });
+  }
+});
+
+router.put("/api/env", (req, res) => {
+  try {
+    const values = req.body || {};
+    writeEnv(values);
+    env.reload();
+    return res.json({ ok: true });
+  } catch (error) {
+    return res.status(500).json({ error: error.message || "failed_to_write_env" });
+  }
 });
 
 router.get("/api/sheet-rows", async (req, res) => {

@@ -13,7 +13,7 @@ async function requestJson(url) {
 
 function setBadge(el, ok, text) {
   el.textContent = text;
-  el.style.color = ok ? '#1f7a44' : '#d94f4f';
+  el.style.color = ok ? '#22c55e' : '#ef4444';
 }
 
 async function loadStatus() {

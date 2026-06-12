@@ -3,108 +3,123 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>HW Notifier Dev Console</title>
+  <title>HW Notifier · Dashboard</title>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/assets/styles.css">
 </head>
 <body>
-  <div class="container">
-    <nav class="nav">
-      <div class="brand">HW Notifier</div>
-      <div class="nav-links">
-        <a class="nav-link is-active" href="/">Dashboard</a>
-        <a class="nav-link" href="/setup">Setup</a>
-        <a class="nav-link" href="/docs">API Docs</a>
-        <a class="nav-link" href="/status">Status</a>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="sidebar-logo">HW</div>
+        <span class="sidebar-name">HW Notifier</span>
       </div>
-    </nav>
+      <nav class="sidebar-nav">
+        <a class="sidebar-link is-active" href="/">
+          <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          Dashboard
+        </a>
+        <a class="sidebar-link" href="/setup">
+          <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Setup
+        </a>
+        <a class="sidebar-link" href="/docs">
+          <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          API Docs
+        </a>
+        <a class="sidebar-link" href="/status">
+          <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Status
+        </a>
+      </nav>
+      <div class="sidebar-footer">v1.0.0 · Node.js + Express</div>
+    </aside>
 
-    <section class="hero">
-      <h1>Dashboard</h1>
-      <p>ส่งการบ้านเข้า LINE ได้ทันที ทั้งแบบ manual และจาก Google Sheet CSV</p>
-      <div class="meta">
-        <span class="pill">Node.js + Express</span>
-        <span class="pill">LINE Messaging API</span>
-        <span class="pill">Google Sheet CSV</span>
+    <div class="mobile-nav">
+      <a class="is-active" href="/">Dashboard</a>
+      <a href="/setup">Setup</a>
+      <a href="/docs">API Docs</a>
+      <a href="/status">Status</a>
+    </div>
+
+    <main class="main">
+      <div class="page-header">
+        <h1>Dashboard</h1>
+        <p>ส่งการบ้านเข้า LINE ได้ทันที — ฟอร์ม manual หรือจาก Google Sheet</p>
       </div>
-    </section>
 
-    <section class="grid">
-      <div class="side-stack">
-        <article class="card">
+      <div class="grid-2">
+        <div class="stack">
+          <div class="card">
+            <div class="panel-title">
+              <div class="card-title" style="margin-bottom:0">Manual Payload <small>ส่งแบบกำหนดเอง</small></div>
+              <span class="tag">POST /notify</span>
+            </div>
+            <form id="manualForm">
+              <label>Subject</label>
+              <input name="subject" required placeholder="วิชา เช่น Database Systems">
+
+              <label>Title</label>
+              <input name="title" required placeholder="หัวข้อ เช่น Lab 3">
+
+              <label>Detail</label>
+              <textarea name="detail" rows="3" required placeholder="รายละเอียดสั้นๆ"></textarea>
+
+              <label>Due (local)</label>
+              <input type="datetime-local" name="due" required>
+
+              <button type="submit" id="manualSubmitBtn" class="btn-success">ส่งไป LINE</button>
+              <div class="status-msg" id="manualStatus"></div>
+            </form>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Environment</div>
+            <div class="kv">
+              <span>CSV Source</span>
+              <strong id="sheetHint">Loading config...</strong>
+              <span>Send Row</span>
+              <strong>POST /notify-row</strong>
+              <span>Health</span>
+              <strong>GET /health</strong>
+            </div>
+            <div class="code-block" aria-label="curl example">curl -X POST http://localhost:8080/notify \
+  -H "Content-Type: application/json" \
+  -d '{"subject":"OS","title":"Quiz","detail":"Chapter 4","due":"2026-05-29T18:00"}'</div>
+          </div>
+        </div>
+
+        <div class="card">
           <div class="panel-title">
-            <h2>Manual Payload <small>ส่งแบบกำหนดเอง</small></h2>
-            <span class="tag">POST /notify</span>
+            <div class="card-title" style="margin-bottom:0">Google Sheet Queue</div>
+            <span class="tag">GET /api/sheet-rows</span>
           </div>
-          <form id="manualForm">
-            <label>Subject</label>
-            <input name="subject" required placeholder="e.g. Database Systems">
-
-            <label>Title</label>
-            <input name="title" required placeholder="Lab #3: Indexing">
-
-            <label>Detail</label>
-            <textarea name="detail" rows="3" required placeholder="Short brief or instructions"></textarea>
-
-            <label>Due (local)</label>
-            <input type="datetime-local" name="due" required>
-
-            <button type="submit" id="manualSubmitBtn">Send to LINE</button>
-            <div class="status" id="manualStatus"></div>
-          </form>
-        </article>
-
-        <article class="card">
-          <div class="panel-title">
-            <h2>Environment Quick View</h2>
-            <span class="tag">/api/config</span>
+          <div class="toolbar">
+            <button id="reloadSheetBtn" type="button" class="ghost">Reload Sheet</button>
+            <span class="muted">Pull latest rows from CSV export</span>
           </div>
-          <div class="kv">
-            <span>CSV Source</span>
-            <strong id="sheetHint">Loading config...</strong>
-            <span>Send Row</span>
-            <strong>POST /notify-row</strong>
-            <span>Health</span>
-            <strong>GET /health</strong>
+          <div class="status-msg" id="sheetStatus"></div>
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Subject</th>
+                  <th>Title</th>
+                  <th>Detail</th>
+                  <th>Due</th>
+                  <th>Send</th>
+                </tr>
+              </thead>
+              <tbody id="sheetRows"></tbody>
+            </table>
           </div>
-          <div class="code-block" aria-label="curl example">
-            curl -X POST http://localhost:8080/notify \
-              -H "Content-Type: application/json" \
-              -d '{"subject":"OS","title":"Quiz","detail":"Chapter 4","due":"2026-05-29T18:00"}'
+          <div class="hint">
+            คอลัมน์ที่รองรับ: subject · subject_name · วิชา, title · topic · หัวข้อ · งาน, detail · description · รายละเอียด, due · date · deadline · กำหนดส่ง · วันที่
           </div>
-        </article>
+        </div>
       </div>
-
-      <article class="card">
-        <div class="panel-title">
-          <h2>Google Sheet Queue</h2>
-          <span class="tag">GET /api/sheet-rows</span>
-        </div>
-        <div class="sheet-toolbar">
-          <button id="reloadSheetBtn" type="button" class="ghost">Reload Sheet</button>
-          <span class="muted">Pull latest rows from CSV export</span>
-        </div>
-        <div class="status" id="sheetStatus"></div>
-        <div class="table-wrap">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Subject</th>
-                <th>Title</th>
-                <th>Detail</th>
-                <th>Due</th>
-                <th>Send</th>
-              </tr>
-            </thead>
-            <tbody id="sheetRows"></tbody>
-          </table>
-        </div>
-        <div class="muted" style="margin-top: 10px;">
-          Tips: column names supported -> subject/subject_name/วิชา, title/topic/หัวข้อ, detail/description/รายละเอียด, due/date/deadline/กำหนดส่ง.
-        </div>
-      </article>
-    </section>
+    </main>
   </div>
 
   <script src="/assets/dashboard.js"></script>
