@@ -1,5 +1,3 @@
-<div align="center">
-
 # HW-to-LINE Notifier
 
 **ระบบแจ้งเตือนการบ้านผ่าน LINE Group (Multi-Team Supported)**  
@@ -8,9 +6,6 @@
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D20-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
 [![Express](https://img.shields.io/badge/Express-4.x-000000?logo=express&logoColor=white)](https://expressjs.com/)
 [![LINE](https://img.shields.io/badge/LINE-Messaging%20API-00C300?logo=line&logoColor=white)](https://developers.line.biz/)
-
-</div>
-
 ---
 
 ## Features
