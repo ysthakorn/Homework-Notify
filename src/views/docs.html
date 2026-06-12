@@ -4,8 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>HW Notifier · API Docs</title>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/assets/styles.css">
+  <script src="/assets/theme.js"></script>
 </head>
 <body>
   <div class="layout">
@@ -14,12 +15,16 @@
         <div class="sidebar-logo">HW</div>
         <span class="sidebar-name">HW Notifier</span>
       </div>
-      <nav class="sidebar-nav">
-        <a class="sidebar-link" href="/">
+            <nav class="sidebar-nav">
+        <a class="sidebar-link " href="/">
           <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
           Dashboard
         </a>
-        <a class="sidebar-link" href="/setup">
+        <a class="sidebar-link " href="/sheet">
+          <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
+          Google Sheet
+        </a>
+        <a class="sidebar-link " href="/setup">
           <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
           Setup
         </a>
@@ -27,7 +32,7 @@
           <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
           API Docs
         </a>
-        <a class="sidebar-link" href="/status">
+        <a class="sidebar-link " href="/status">
           <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
           Status
         </a>
@@ -35,17 +40,24 @@
       <div class="sidebar-footer">v1.0.0 · Node.js + Express</div>
     </aside>
 
-    <div class="mobile-nav">
-      <a href="/">Dashboard</a>
-      <a href="/setup">Setup</a>
-      <a class="is-active" href="/docs">API Docs</a>
-      <a href="/status">Status</a>
+        <div class="mobile-nav">
+      <a class="" href="/">Dashboard</a>
+      <a class="" href="/sheet">Sheet</a>
+      <a class="" href="/setup">Setup</a>
+      <a class="is-active" href="/docs">Docs</a>
+      <a class="" href="/status">Status</a>
     </div>
 
     <main class="main">
       <div class="page-header">
+        <div class="page-header-info">
         <h1>API Docs</h1>
         <p>รายการ endpoint และตัวอย่าง payload สำหรับเรียกใช้งานระบบ</p>
+      </div>
+        <div class="team-switcher-wrapper">
+          <span class="team-switcher-label">TEAM</span>
+          <select class="globalTeamSelect"></select>
+        </div>
       </div>
 
       <div class="section-gap">
@@ -129,5 +141,7 @@
       </div>
     </main>
   </div>
+  <script src="/assets/teams.js"></script>
+  <script src="/assets/transitions.js"></script>
 </body>
 </html>

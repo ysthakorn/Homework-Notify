@@ -1,11 +1,6 @@
 const manualForm = document.getElementById('manualForm');
 const manualSubmitBtn = document.getElementById('manualSubmitBtn');
 const manualStatus = document.getElementById('manualStatus');
-const sheetRows = document.getElementById('sheetRows');
-const sheetStatus = document.getElementById('sheetStatus');
-const reloadSheetBtn = document.getElementById('reloadSheetBtn');
-const sheetHint = document.getElementById('sheetHint');
-let sheetData = [];
 
 function setStatus(el, text, isError = false) {
   el.textContent = text;
@@ -13,7 +8,7 @@ function setStatus(el, text, isError = false) {
 }
 
 async function requestJson(url, options = {}) {
-  const res = await fetch(url, options);
+  const res = await (window.teamFetch ? window.teamFetch(url, options) : fetch(url, options));
   const body = await res.json().catch(() => ({}));
   if (!res.ok) {
     throw new Error(body.error || 'request_failed');
@@ -21,105 +16,47 @@ async function requestJson(url, options = {}) {
   return body;
 }
 
-function rowHtml(row, index) {
-  const safe = (v) => (v || '-').toString();
-  return `
-    <tr>
-      <td>${safe(row.rowId)}</td>
-      <td>${safe(row.subject)}</td>
-      <td>${safe(row.title)}</td>
-      <td>${safe(row.detail)}</td>
-      <td>${safe(row.due)}</td>
-      <td class="row-send">
-        <button type="button" data-row-index="${index}" class="send-row-btn">ส่งแถวนี้</button>
-      </td>
-    </tr>
-  `;
+if (manualForm) {
+  manualForm.onsubmit = async (e) => {
+    e.preventDefault();
+    manualSubmitBtn.disabled = true;
+    setStatus(manualStatus, 'กำลังส่ง...');
+
+    const payload = Object.fromEntries(new FormData(manualForm));
+    payload.teamId = localStorage.getItem('activeTeamId');
+
+    try {
+      await requestJson('/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      setStatus(manualStatus, 'ส่งสำเร็จ');
+      manualForm.reset();
+    } catch (err) {
+      setStatus(manualStatus, err.message || 'ส่งไม่สำเร็จ', true);
+    } finally {
+      manualSubmitBtn.disabled = false;
+    }
+  };
 }
 
-async function loadSheetRows() {
-  sheetRows.innerHTML = '<tr><td colspan="6" class="muted">กำลังโหลด...</td></tr>';
-  sheetStatus.textContent = '';
+const sheetHint = document.getElementById('sheetHint');
+window.addEventListener('teamChanged', async () => {
+  const teamId = localStorage.getItem('activeTeamId');
+  if (!teamId || !sheetHint) return;
 
   try {
-    const data = await requestJson('/api/sheet-rows');
-    if (!data.rows || data.rows.length === 0) {
-      sheetRows.innerHTML = '<tr><td colspan="6" class="muted">ไม่มีข้อมูลในชีต</td></tr>';
-      setStatus(sheetStatus, 'โหลดสำเร็จ แต่ยังไม่มีแถวข้อมูล');
-      return;
+    const res = await requestJson('/api/teams');
+    const team = res.teams.find(t => t.id === teamId);
+    if (team) {
+      if (!team.googleSheetCsvUrl) {
+        sheetHint.textContent = 'Not configured';
+        sheetHint.classList.add('danger');
+      } else {
+        sheetHint.textContent = 'Configured';
+        sheetHint.classList.remove('danger');
+      }
     }
-
-    sheetData = data.rows;
-    sheetRows.innerHTML = data.rows.map(rowHtml).join('');
-    setStatus(sheetStatus, `โหลดสำเร็จ ${data.rows.length} แถว`);
-  } catch (err) {
-    sheetData = [];
-    sheetRows.innerHTML = '<tr><td colspan="6" class="danger">โหลดข้อมูลจากชีตไม่สำเร็จ</td></tr>';
-    setStatus(sheetStatus, err.message || 'โหลดข้อมูลล้มเหลว', true);
-  }
-}
-
-manualForm.onsubmit = async (e) => {
-  e.preventDefault();
-  manualSubmitBtn.disabled = true;
-  setStatus(manualStatus, 'กำลังส่ง...');
-
-  try {
-    await requestJson('/notify', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(Object.fromEntries(new FormData(manualForm)))
-    });
-    setStatus(manualStatus, 'ส่งสำเร็จ');
-    manualForm.reset();
-  } catch (err) {
-    setStatus(manualStatus, err.message || 'ส่งไม่สำเร็จ', true);
-  } finally {
-    manualSubmitBtn.disabled = false;
-  }
-};
-
-sheetRows.onclick = async (e) => {
-  const button = e.target.closest('.send-row-btn');
-  if (!button) {
-    return;
-  }
-
-  const rowIndex = Number(button.getAttribute('data-row-index'));
-  const rowData = sheetData[rowIndex];
-  if (!rowData) {
-    setStatus(sheetStatus, 'ข้อมูลแถวไม่ถูกต้อง', true);
-    return;
-  }
-
-  button.disabled = true;
-  button.textContent = 'กำลังส่ง...';
-  try {
-    await requestJson('/notify-row', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(rowData)
-    });
-    button.textContent = 'ส่งแล้ว';
-    setStatus(sheetStatus, `ส่งแถว ${rowData.rowId || ''} สำเร็จ`);
-  } catch (err) {
-    button.disabled = false;
-    button.textContent = 'ส่งแถวนี้';
-    setStatus(sheetStatus, err.message || 'ส่งไม่สำเร็จ', true);
-  }
-};
-
-reloadSheetBtn.onclick = () => {
-  loadSheetRows();
-};
-
-(async () => {
-  try {
-    const config = await requestJson('/api/config');
-    if (!config.hasGoogleSheet) {
-      sheetHint.textContent = 'ยังไม่ได้ตั้ง GOOGLE_SHEET_CSV_URL ใน .env';
-      sheetHint.classList.add('danger');
-    }
-  } catch (_) {}
-  loadSheetRows();
-})();
+  } catch (err) {}
+});

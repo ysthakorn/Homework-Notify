@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>HW Notifier · Status</title>
+  <title>HW Notifier · Dashboard</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/assets/styles.css">
   <script src="/assets/theme.js"></script>
@@ -20,7 +20,7 @@
           <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
           Dashboard
         </a>
-        <a class="sidebar-link " href="/sheet">
+        <a class="sidebar-link is-active" href="/sheet">
           <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
           Google Sheet
         </a>
@@ -32,7 +32,7 @@
           <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
           API Docs
         </a>
-        <a class="sidebar-link is-active" href="/status">
+        <a class="sidebar-link " href="/status">
           <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
           Status
         </a>
@@ -42,17 +42,17 @@
 
         <div class="mobile-nav">
       <a class="" href="/">Dashboard</a>
-      <a class="" href="/sheet">Sheet</a>
+      <a class="is-active" href="/sheet">Sheet</a>
       <a class="" href="/setup">Setup</a>
       <a class="" href="/docs">Docs</a>
-      <a class="is-active" href="/status">Status</a>
+      <a class="" href="/status">Status</a>
     </div>
 
     <main class="main">
       <div class="page-header">
         <div class="page-header-info">
-        <h1>Status</h1>
-        <p>ภาพรวมสถานะระบบและการตั้งค่าพื้นฐาน</p>
+        <h1>Google Sheet Queue</h1>
+        <p>โหลดรายการการบ้านจาก Google Sheet และเลือกส่งเข้า LINE</p>
       </div>
         <div class="team-switcher-wrapper">
           <span class="team-switcher-label">TEAM</span>
@@ -61,48 +61,41 @@
       </div>
 
       <div class="section-gap">
-        <div class="grid-auto">
-          <div class="card">
-            <div class="card-title">Health Check</div>
-            <div class="kv">
-              <span>Status</span>
-              <strong id="healthValue">Checking...</strong>
-              <span>Last Updated</span>
-              <strong id="statusUpdated">-</strong>
-            </div>
-          </div>
-          <div class="card">
-            <div class="card-title">Google Sheet</div>
-            <div class="kv">
-              <span>Config</span>
-              <strong id="configValue">Checking...</strong>
-              <span>Endpoint</span>
-              <strong>/api/config</strong>
-            </div>
-          </div>
-          <div class="card">
-            <div class="card-title">Quick Actions</div>
-            <div class="stack" style="gap: 6px">
-              <span class="badge badge-get" style="width:fit-content">GET /health</span>
-              <span class="badge badge-get" style="width:fit-content">GET /api/config</span>
-              <span class="badge badge-get" style="width:fit-content">GET /api/sheet-rows</span>
-            </div>
-          </div>
-        </div>
 
         <div class="card">
-          <div class="card-title">Notes</div>
-          <ul class="list">
-            <li>ถ้า Health ไม่ผ่าน ให้ตรวจสอบการรันเซิร์ฟเวอร์และ env ที่จำเป็น</li>
-            <li>ถ้า Google Sheet เป็น Missing ให้เช็ค GOOGLE_SHEET_CSV_URL</li>
-            <li>หน้า Dashboard จะยังส่ง manual ได้แม้ไม่มีชีต</li>
-          </ul>
+          <div class="panel-title">
+            <div class="card-title" style="margin-bottom:0">Google Sheet Queue</div>
+            <span class="tag">GET /api/sheet-rows</span>
+          </div>
+          <div class="toolbar">
+            <button id="reloadSheetBtn" type="button" class="ghost">Reload Sheet</button>
+            <span class="muted">Pull latest rows from CSV export</span>
+          </div>
+          <div class="status-msg" id="sheetStatus"></div>
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Subject</th>
+                  <th>Title</th>
+                  <th>Detail</th>
+                  <th>Due</th>
+                  <th>Send</th>
+                </tr>
+              </thead>
+              <tbody id="sheetRows"></tbody>
+            </table>
+          </div>
+          <div class="hint">
+            คอลัมน์ที่รองรับ: subject · subject_name · วิชา, title · topic · หัวข้อ · งาน, detail · description · รายละเอียด, due · date · deadline · กำหนดส่ง · วันที่
+          </div>
         </div>
       </div>
     </main>
   </div>
 
-  <script src="/assets/status.js"></script>
+  <script src="/assets/sheet.js"></script>
   <script src="/assets/teams.js"></script>
   <script src="/assets/transitions.js"></script>
 </body>

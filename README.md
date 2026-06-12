@@ -118,7 +118,8 @@ npm run dev
 
 | Path | Description |
 |---|---|
-| `/` | 📋 Dashboard — ฟอร์มส่งการบ้าน + ตาราง Google Sheet |
+| `/` | 📋 Dashboard — ฟอร์มส่งการบ้านแบบกำหนดเอง |
+| `/sheet` | 📊 Google Sheet — ตารางคิวการบ้านจาก Google Sheet |
 | `/setup` | ⚙️ Setup — แก้ไข .env ได้จากหน้าเว็บ |
 | `/docs` | 📖 API documentation |
 | `/status` | 📊 System status |
@@ -159,6 +160,7 @@ subject,title,detail,date
 | Method | Path | Description |
 |---|---|---|
 | `GET` | `/` | Dashboard (HTML) |
+| `GET` | `/sheet` | Google Sheet Queue (HTML) |
 | `GET` | `/setup` | Setup guide (HTML) |
 | `GET` | `/docs` | API docs (HTML) |
 | `GET` | `/status` | System status (HTML) |

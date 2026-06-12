@@ -1,129 +1,194 @@
 const envForm = document.getElementById('envForm');
-const envStatus = document.getElementById('envStatus');
 const envFields = document.getElementById('envFields');
-const toggleTokenBtn = document.getElementById('toggleToken');
-
-const ENV_SCHEMA = [
-  {
-    key: 'LINE_ACCESS_TOKEN',
-    label: 'LINE Access Token',
-    hint: 'Channel Access Token (Long-lived) จาก LINE Developers Console',
-    type: 'password',
-    placeholder: 'YOUR_TOKEN_HERE',
-  },
-  {
-    key: 'LINE_GROUP_ID',
-    label: 'LINE Group ID',
-    hint: 'Group ID ของกลุ่ม LINE ที่ต้องการส่งข้อความ',
-    type: 'text',
-    placeholder: 'YOUR_GROUP_ID_HERE',
-  },
-  {
-    key: 'PORT',
-    label: 'Port',
-    hint: 'พอร์ตสำหรับรัน server (เปลี่ยนแล้วต้อง restart)',
-    type: 'text',
-    placeholder: '8080',
-  },
-  {
-    key: 'LINE_REQUEST_TIMEOUT_SEC',
-    label: 'Request Timeout (sec)',
-    hint: 'timeout สำหรับ LINE API request เป็นวินาที',
-    type: 'text',
-    placeholder: '10',
-  },
-  {
-    key: 'GOOGLE_SHEET_CSV_URL',
-    label: 'Google Sheet CSV URL',
-    hint: 'URL export CSV เช่น https://docs.google.com/spreadsheets/d/SHEET_ID/export?format=csv&gid=0',
-    type: 'url',
-    placeholder: 'https://docs.google.com/spreadsheets/d/.../export?format=csv&gid=0',
-  },
-];
+const envStatus = document.getElementById('envStatus');
+const deleteTeamBtn = document.getElementById('deleteTeamBtn');
 
 function setStatus(text, isError = false) {
   envStatus.textContent = text;
   envStatus.style.color = isError ? '#ef4444' : '#22c55e';
+  setTimeout(() => { envStatus.textContent = ''; }, 3000);
 }
 
-function buildFields(values) {
-  envFields.innerHTML = ENV_SCHEMA.map((field) => {
-    const value = values[field.key] || '';
-    const inputType = field.type || 'text';
-    const isPassword = inputType === 'password';
+let currentTeamData = null;
 
-    return `
-      <div class="env-row">
-        <div class="env-row-header">
-          <label class="env-key" for="env-${field.key}">${field.key}</label>
-          ${isPassword ? '<button type="button" class="ghost toggle-vis" data-target="env-' + field.key + '">Show</button>' : ''}
-        </div>
-        <span class="env-hint">${field.hint}</span>
-        <input
-          id="env-${field.key}"
-          name="${field.key}"
-          type="${inputType}"
-          value="${escapeAttr(value)}"
-          placeholder="${field.placeholder}"
-          autocomplete="off"
-          spellcheck="false"
-        >
-      </div>
-    `;
-  }).join('');
-}
+async function loadTeamConfig() {
+  const teamId = localStorage.getItem('activeTeamId');
+  if (!teamId) return;
 
-function escapeAttr(str) {
-  return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
-}
-
-async function loadEnv() {
   try {
-    const res = await fetch('/api/env');
+    const fetcher = window.teamFetch || fetch;
+    const res = await fetcher(`/api/teams/${teamId}`);
+    if (!res.ok) {
+      const data = await res.json().catch(()=>({}));
+      throw new Error(data.error || 'Failed to load team config');
+    }
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'failed');
-    buildFields(data.values || {});
+    const team = data.team;
+    
+    if (team) {
+      envFields.innerHTML = `
+        <label>Team Name</label>
+        <input name="name" type="text" value="${team.name || ''}" required>
+        
+        <label>LINE Access Token</label>
+        <input name="lineAccessToken" type="text" value="${team.lineAccessToken || ''}">
+        
+        <label>LINE Group ID (to)</label>
+        <input name="lineGroupId" type="text" value="${team.lineGroupId || ''}">
+        
+        <label>Google Sheet CSV URL</label>
+        <input name="googleSheetCsvUrl" type="text" value="${team.googleSheetCsvUrl || ''}">
+        
+        <label>Password <span style="font-size: 0.75rem; color: var(--muted); font-weight: normal;">(Leave blank to keep unchanged, or clear to remove)</span></label>
+        <input name="password" type="password" value="" placeholder="Enter new password to lock team">
+      `;
+      
+      currentTeamData = team;
+      
+      const meRes = await fetch('/api/me');
+      const meData = await meRes.json();
+      const myEmail = meData.user ? meData.user.email : '';
+      
+      const listRes = await fetch('/api/teams');
+      const listData = await listRes.json();
+      
+      if (team.owner === myEmail || listData.isAdmin) {
+        document.getElementById('membersCard').style.display = 'block';
+        renderMembers();
+      } else {
+        document.getElementById('membersCard').style.display = 'none';
+      }
+      
+      // Determine if we can delete this team (check total teams count)
+      if (listData.teams && listData.teams.length <= 1) {
+        deleteTeamBtn.style.display = 'none';
+      } else {
+        deleteTeamBtn.style.display = 'inline-block';
+      }
+    }
   } catch (err) {
-    setStatus('โหลด env ไม่สำเร็จ: ' + err.message, true);
+    if (err.message !== 'Canceled password entry') {
+      envFields.innerHTML = `<div class="danger">โหลดข้อมูลไม่สำเร็จ: ${err.message}</div>`;
+    }
   }
 }
 
-envForm.addEventListener('submit', async (e) => {
+envForm.onsubmit = async (e) => {
   e.preventDefault();
-  const formData = new FormData(envForm);
-  const values = Object.fromEntries(formData);
+  const teamId = localStorage.getItem('activeTeamId');
+  if (!teamId) return;
 
-  setStatus('กำลังบันทึก...');
+  setStatus('กำลังบันทึก...', false);
+  const formData = new FormData(envForm);
+  const payload = Object.fromEntries(formData);
+  
+  if (!payload.password) {
+    delete payload.password; // Keep unchanged
+  }
 
   try {
-    const res = await fetch('/api/env', {
+    const fetcher = window.teamFetch || fetch;
+    const res = await fetcher(`/api/teams/${teamId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(values),
+      body: JSON.stringify(payload)
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'failed');
-    setStatus('บันทึกสำเร็จ — ค่าใหม่มีผลทันที');
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) {
+      if (payload.password) {
+        sessionStorage.setItem('team_pwd_' + teamId, payload.password);
+      }
+      setStatus('บันทึกสำเร็จ!');
+      // Update global team list
+      window.dispatchEvent(new Event('teamChanged'));
+    } else {
+      setStatus(data.error || 'บันทึกไม่สำเร็จ', true);
+    }
   } catch (err) {
-    setStatus('บันทึกไม่สำเร็จ: ' + err.message, true);
+    if (err.message !== 'Canceled password entry') {
+      setStatus('เกิดข้อผิดพลาดในการเชื่อมต่อ', true);
+    }
   }
-});
+};
 
-envFields.addEventListener('click', (e) => {
-  const btn = e.target.closest('.toggle-vis');
-  if (!btn) return;
-
-  const targetId = btn.getAttribute('data-target');
-  const input = document.getElementById(targetId);
-  if (!input) return;
-
-  if (input.type === 'password') {
-    input.type = 'text';
-    btn.textContent = 'Hide';
-  } else {
-    input.type = 'password';
-    btn.textContent = 'Show';
+deleteTeamBtn.onclick = async () => {
+  const teamId = localStorage.getItem('activeTeamId');
+  if (!teamId) return;
+  
+  if (!confirm('Are you sure you want to delete this team?')) return;
+  
+  try {
+    const res = await fetch(`/api/teams/${teamId}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error();
+    localStorage.removeItem('activeTeamId');
+    loadTeams(); // re-init and auto-select another team
+  } catch (err) {
+    alert('Failed to delete team.');
   }
-});
+};
 
-loadEnv();
+function renderMembers() {
+  const list = document.getElementById('membersList');
+  if (!currentTeamData.members) currentTeamData.members = [];
+  
+  if (currentTeamData.members.length === 0) {
+    list.innerHTML = '<div class="muted">No shared members yet.</div>';
+    return;
+  }
+  
+  list.innerHTML = currentTeamData.members.map((m, i) => `
+    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg); padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+      <span style="font-size: 0.9rem;">${m}</span>
+      <button type="button" class="ghost" style="color: #ef4444; padding: 4px;" onclick="removeMember(${i})">Remove</button>
+    </div>
+  `).join('');
+}
+
+window.removeMember = async function(idx) {
+  currentTeamData.members.splice(idx, 1);
+  await saveMembers();
+  renderMembers();
+};
+
+document.getElementById('addMemberBtn').onclick = async () => {
+  const input = document.getElementById('newMemberEmail');
+  const email = input.value.trim();
+  if (!email) return;
+  if (!currentTeamData.members) currentTeamData.members = [];
+  if (currentTeamData.members.includes(email)) return;
+  
+  currentTeamData.members.push(email);
+  input.value = '';
+  await saveMembers();
+  renderMembers();
+};
+
+async function saveMembers() {
+  const teamId = currentTeamData.id;
+  const fetcher = window.teamFetch || fetch;
+  const status = document.getElementById('memberStatus');
+  status.textContent = 'Saving...';
+  status.style.color = 'var(--muted)';
+  try {
+    const res = await fetcher(`/api/teams/${teamId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ members: currentTeamData.members })
+    });
+    if (res.ok) {
+      status.textContent = 'Members updated successfully.';
+      status.style.color = '#22c55e';
+      setTimeout(() => status.textContent = '', 2000);
+      window.dispatchEvent(new Event('teamChanged'));
+    } else {
+      status.textContent = 'Failed to update members.';
+      status.style.color = '#ef4444';
+    }
+  } catch (err) {
+    status.textContent = 'Error connecting to server.';
+    status.style.color = '#ef4444';
+  }
+}
+
+window.addEventListener('teamChanged', loadTeamConfig);
+document.addEventListener('DOMContentLoaded', loadTeamConfig);

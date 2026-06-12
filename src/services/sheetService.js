@@ -95,13 +95,13 @@ function mapToHomeworkRow(row, index) {
   };
 }
 
-async function fetchHomeworkRows() {
-  if (!env.googleSheetCsvUrl) {
-    throw new Error("GOOGLE_SHEET_CSV_URL is not configured");
+async function fetchHomeworkRows(googleSheetCsvUrl, requestTimeoutMs = 10000) {
+  if (!googleSheetCsvUrl) {
+    throw new Error("Google Sheet CSV URL is not configured for this team.");
   }
 
-  const response = await axios.get(env.googleSheetCsvUrl, {
-    timeout: env.lineRequestTimeoutMs,
+  const response = await axios.get(googleSheetCsvUrl, {
+    timeout: requestTimeoutMs,
   });
 
   const rawRows = parseCsvText(response.data);
