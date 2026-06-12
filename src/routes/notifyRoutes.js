@@ -114,13 +114,12 @@ function requireTeamAuth(req, res, next) {
   const isOwner = team.owner === req.userEmail;
   const isMember = team.members && team.members.includes(req.userEmail);
   const isAdmin = ADMIN_EMAILS.includes(req.userEmail);
-  const isLegacyPublic = !team.owner && !team.password;
 
-  if (!isOwner && !isMember && !isAdmin && !isLegacyPublic) {
-    if (team.password && team.password !== req.headers['x-team-password']) {
-      return res.status(401).json({ error: "Unauthorized: Incorrect Team Password", isLocked: true });
+  if (!isOwner && !isMember && !isAdmin) {
+    if (team.apiKey && team.apiKey !== req.headers['x-api-key']) {
+      return res.status(401).json({ error: "Unauthorized: Incorrect API Key" });
     }
-    if (!team.password) {
+    if (!team.apiKey) {
       return res.status(403).json({ error: "Forbidden: You don't have access to this team" });
     }
   }
@@ -139,28 +138,50 @@ router.get("/api/teams", (req, res) => {
     const isOwner = t.owner === req.userEmail;
     const isMember = t.members && t.members.includes(req.userEmail);
     const hasAclAccess = isAdmin || isOwner || isMember;
-    const isLegacyPublic = !t.owner && !t.password;
     
-    // Hide strictly private teams (no password, no access)
-    if (!hasAclAccess && !isLegacyPublic && !t.password) {
+    // Strict Privacy: Only show teams the user explicitly has access to
+    if (!hasAclAccess) {
       continue;
     }
     
     publicTeams.push({
       id: t.id,
       name: t.name,
-      isLocked: (hasAclAccess || isLegacyPublic) ? false : !!t.password,
-      hasSheet: !!t.googleSheetCsvUrl,
+      isLocked: false, // Always false because they already have ACL access
+      hasSheet: !!t.googleSheetId,
       owner: t.owner
     });
   }
+  
+  if (publicTeams.length === 0) {
+    let name = '';
+    const jwt = req.headers['cf-access-jwt-assertion'];
+    if (jwt) {
+      try {
+        const payloadBase64 = jwt.split('.')[1];
+        const payloadStr = Buffer.from(payloadBase64, 'base64').toString('utf8');
+        const payload = JSON.parse(payloadStr);
+        name = payload.name || payload.common_name;
+      } catch (e) {}
+    }
+    const displayName = name || (req.userEmail ? req.userEmail.split('@')[0] : 'My');
+    const newTeam = teamService.createTeam(`${displayName}'s Team`, "", "", "", "", req.userEmail);
+    publicTeams.push({
+      id: newTeam.id,
+      name: newTeam.name,
+      isLocked: false,
+      hasSheet: false,
+      owner: newTeam.owner
+    });
+  }
+  
   res.json({ ok: true, teams: publicTeams, isAdmin });
 });
 
 router.post("/api/teams", (req, res) => {
-  const { name, lineAccessToken, lineGroupId, googleSheetCsvUrl, password } = req.body || {};
+  const { name, lineAccessToken, lineGroupId, googleSheetId, apiKey } = req.body || {};
   if (!name) return res.status(400).json({ error: "Name is required" });
-  const team = teamService.createTeam(name, lineAccessToken, lineGroupId, googleSheetCsvUrl, password, req.userEmail);
+  const team = teamService.createTeam(name, lineAccessToken, lineGroupId, googleSheetId, apiKey, req.userEmail);
   res.json({ ok: true, team: { id: team.id, name: team.name, isLocked: false, owner: team.owner } });
 });
 
@@ -170,8 +191,13 @@ router.get("/api/teams/:id", requireTeamAuth, (req, res) => {
 });
 
 router.put("/api/teams/:id", requireTeamAuth, (req, res) => {
-  const team = teamService.updateTeam(req.params.id, req.body || {});
-  res.json({ ok: true, team: { id: team.id, name: team.name, isLocked: !!team.password } });
+  let updateData = req.body || {};
+  if (updateData.regenerateApiKey) {
+    updateData.apiKey = `hw_${require('crypto').randomBytes(16).toString('hex')}`;
+    delete updateData.regenerateApiKey;
+  }
+  const team = teamService.updateTeam(req.params.id, updateData);
+  res.json({ ok: true, team: { id: team.id, name: team.name, apiKey: team.apiKey } });
 });
 
 router.delete("/api/teams/:id", requireTeamAuth, (req, res) => {
@@ -187,7 +213,7 @@ router.delete("/api/teams/:id", requireTeamAuth, (req, res) => {
 // --- Notify & Sheet API ---
 router.get("/api/sheet-rows", requireTeamAuth, async (req, res) => {
   try {
-    const rows = await fetchHomeworkRows(req.team.googleSheetCsvUrl, env.lineRequestTimeoutMs);
+    const rows = await fetchHomeworkRows(req.team.googleSheetId, env.lineRequestTimeoutMs);
     return res.json({ ok: true, rows });
   } catch (error) {
     return res.status(400).json({

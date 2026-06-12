@@ -95,12 +95,16 @@ function mapToHomeworkRow(row, index) {
   };
 }
 
-async function fetchHomeworkRows(googleSheetCsvUrl, requestTimeoutMs = 10000) {
-  if (!googleSheetCsvUrl) {
-    throw new Error("Google Sheet CSV URL is not configured for this team.");
+async function fetchHomeworkRows(googleSheetId, requestTimeoutMs = 10000) {
+  if (!googleSheetId) {
+    throw new Error("Google Sheet ID is not configured for this team.");
   }
 
-  const response = await axios.get(googleSheetCsvUrl, {
+  // Handle both raw ID and legacy full URL for safety
+  const isUrl = googleSheetId.startsWith('http');
+  const fetchUrl = isUrl ? googleSheetId : `https://docs.google.com/spreadsheets/d/${googleSheetId}/export?format=csv&gid=0`;
+
+  const response = await axios.get(fetchUrl, {
     timeout: requestTimeoutMs,
   });
 

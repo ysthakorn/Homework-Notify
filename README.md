@@ -20,8 +20,8 @@
 - **Access Control & Identity** — 
   - รองรับ Cloudflare Access (อ่านอีเมลผู้ใช้จาก Header)
   - ระบบ Team Ownership และ Team Members (แชร์สิทธิ์ให้คนอื่นในทีม)
-  - ระบบล็อกรหัสผ่าน (Team Password Lock) สำหรับบุคคลภายนอก
-- **Admin Panel & Audit Logs** — แผงควบคุมสำหรับผู้ดูแลระบบ สามารถดูประวัติการส่งการบ้าน (Audit Logs) และข้ามการป้องกันรหัสผ่านของทุกทีมได้
+  - ระบบ Auto-Generated API Key สำหรับการเรียกใช้ผ่านระบบภายนอก
+- **Admin Panel & Audit Logs** — แผงควบคุมสำหรับผู้ดูแลระบบ สามารถดูประวัติการส่งการบ้าน (Audit Logs) และสวมรอย (Impersonate) เข้าไปยังทีมต่างๆ ได้
 - **Web-based Setup** — แก้ไขค่าตั้งค่า (LINE Token, Group ID, Google Sheet) ของแต่ละทีมได้จากหน้าเว็บโดยตรง ไม่ต้องแก้ไฟล์
 - **Google Sheet Integration** — โหลดรายการจากการบ้านจาก Google Sheet พร้อมปุ่ม "ส่งแถวนี้"
 - **LINE Push Message** — ส่งข้อความเข้า LINE Group ผ่าน Messaging API ด้วย Template ที่สวยงาม
@@ -110,8 +110,7 @@ npm run dev
 
 ### Team Authentication Headers
 
-ถ้าทีมมีการล็อครหัสผ่าน:
-`X-Team-Password: YOUR_TEAM_PASSWORD`
+`X-API-Key: YOUR_API_KEY`
 
 ถ้าต้องการระบุ Team ID (ใน Query หรือ Body):
 `teamId=YOUR_TEAM_ID`

@@ -5,6 +5,13 @@ const { readEnv } = require('./envService'); // fallback to grab old .env config
 
 const DATA_FILE = path.join(__dirname, '../../data/teams.json');
 
+function extractSheetId(input) {
+  if (!input) return '';
+  const match = input.match(/\/d\/([a-zA-Z0-9-_]+)/);
+  if (match) return match[1];
+  return input.trim();
+}
+
 function readTeams() {
   if (!fs.existsSync(DATA_FILE)) {
     // Migrate old .env to Default Team if data file doesn't exist
@@ -24,7 +31,18 @@ function readTeams() {
   
   try {
     const raw = fs.readFileSync(DATA_FILE, 'utf8');
-    return JSON.parse(raw);
+    let teams = JSON.parse(raw);
+    let migrated = false;
+    teams = teams.map(t => {
+      if (t.googleSheetCsvUrl !== undefined) {
+        t.googleSheetId = extractSheetId(t.googleSheetCsvUrl);
+        delete t.googleSheetCsvUrl;
+        migrated = true;
+      }
+      return t;
+    });
+    if (migrated) writeTeams(teams);
+    return teams;
   } catch (err) {
     return [];
   }
@@ -43,15 +61,15 @@ function getTeamById(id) {
   return teams.find(t => t.id === id) || null;
 }
 
-function createTeam(name, lineAccessToken = '', lineGroupId = '', googleSheetCsvUrl = '', password = '', ownerEmail = 'dev@localhost') {
+function createTeam(name, lineAccessToken = '', lineGroupId = '', googleSheetId = '', apiKey = '', ownerEmail = 'dev@localhost') {
   const teams = readTeams();
   const newTeam = {
     id: crypto.randomUUID(),
     name,
     lineAccessToken,
     lineGroupId,
-    googleSheetCsvUrl,
-    password,
+    googleSheetId: extractSheetId(googleSheetId),
+    apiKey: apiKey || `hw_${crypto.randomBytes(16).toString('hex')}`,
     owner: ownerEmail,
     members: []
   };
@@ -63,11 +81,20 @@ function createTeam(name, lineAccessToken = '', lineGroupId = '', googleSheetCsv
 function updateTeam(id, data) {
   const teams = readTeams();
   const index = teams.findIndex(t => t.id === id);
-  if (index === -1) return null;
-  
-  teams[index] = { ...teams[index], ...data, id }; // Ensure ID can't be changed
-  writeTeams(teams);
-  return teams[index];
+  if (index !== -1) {
+    if (data.googleSheetId !== undefined) {
+      data.googleSheetId = extractSheetId(data.googleSheetId);
+    }
+    // Also handle if frontend still sends googleSheetCsvUrl
+    if (data.googleSheetCsvUrl !== undefined) {
+      data.googleSheetId = extractSheetId(data.googleSheetCsvUrl);
+      delete data.googleSheetCsvUrl;
+    }
+    teams[index] = { ...teams[index], ...data };
+    writeTeams(teams);
+    return teams[index];
+  }
+  return null;
 }
 
 function deleteTeam(id) {

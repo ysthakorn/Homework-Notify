@@ -73,7 +73,6 @@ function renderTeamSelect() {
           ${currentTeams.map(t => `
             <div class="dropdown-item ${t.id === activeId ? 'is-active' : ''}" data-id="${t.id}" data-locked="${t.isLocked}">
               ${t.name}
-              ${t.isLocked ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-left:6px; opacity: 0.6;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>` : ''}
               ${t.id === activeId ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:auto; color:var(--primary);"><polyline points="20 6 9 17 4 12"></polyline></svg>` : ''}
             </div>
           `).join('')}
@@ -102,28 +101,8 @@ function renderTeamSelect() {
     items.forEach(item => {
       item.addEventListener('click', async () => {
         const targetId = item.getAttribute('data-id');
-        const isLocked = item.getAttribute('data-locked') === 'true';
-        
         if (targetId === activeId) return;
         menu.classList.remove('show');
-
-        if (isLocked) {
-          const savedPwd = sessionStorage.getItem('team_pwd_' + targetId);
-          if (!savedPwd) {
-            const pwd = await promptTeamPassword();
-            if (pwd === null) return;
-            
-            // Verify
-            const res = await fetch('/api/teams/' + targetId, {
-              headers: { 'X-Team-Password': pwd }
-            });
-            if (!res.ok) {
-              alert('รหัสผ่านไม่ถูกต้อง (Incorrect password)');
-              return;
-            }
-            sessionStorage.setItem('team_pwd_' + targetId, pwd);
-          }
-        }
 
         localStorage.setItem('activeTeamId', targetId);
         window.dispatchEvent(new Event('teamChanged'));
@@ -160,8 +139,6 @@ function injectModalHtml() {
         <div class="modal-body">
           <label>Team Name</label>
           <input type="text" id="newTeamNameInput" placeholder="e.g. Web Development" autocomplete="off" style="margin-bottom: 12px;">
-          <label>Password <span style="font-size: 0.75rem; color: var(--muted); font-weight: normal;">(Optional)</span></label>
-          <input type="password" id="newTeamPasswordInput" placeholder="Leave blank for no password" autocomplete="off">
         </div>
         <div class="modal-footer">
           <button class="ghost" id="cancelModalBtn">Cancel</button>
@@ -172,27 +149,7 @@ function injectModalHtml() {
   `;
   document.body.insertAdjacentHTML('beforeend', modalHtml);
 
-  // Auth Modal Html
-  const authModalHtml = `
-    <div class="modal-overlay" id="authTeamModal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2>Team is Locked</h2>
-          <button class="modal-close" id="closeAuthModalBtn">&times;</button>
-        </div>
-        <div class="modal-body">
-          <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 12px;">This team requires a password to perform actions.</p>
-          <label>Password</label>
-          <input type="password" id="authTeamPasswordInput" placeholder="Enter team password" autocomplete="off">
-        </div>
-        <div class="modal-footer">
-          <button class="ghost" id="cancelAuthModalBtn">Cancel</button>
-          <button class="btn-success" id="confirmAuthModalBtn">Unlock</button>
-        </div>
-      </div>
-    </div>
-  `;
-  document.body.insertAdjacentHTML('beforeend', authModalHtml);
+
 
   // Modal Listeners
   document.getElementById('closeModalBtn').onclick = hideCreateTeamModal;
@@ -204,72 +161,15 @@ function injectModalHtml() {
   });
 }
 
-// --- Team Auth Handlers ---
-let authPromiseResolver = null;
-
-function promptTeamPassword() {
-  injectModalHtml();
-  const modal = document.getElementById('authTeamModal');
-  const input = document.getElementById('authTeamPasswordInput');
-  input.value = '';
-  modal.classList.add('show');
-  input.focus();
-
-  return new Promise((resolve) => {
-    authPromiseResolver = resolve;
-
-    document.getElementById('closeAuthModalBtn').onclick = () => { modal.classList.remove('show'); resolve(null); };
-    document.getElementById('cancelAuthModalBtn').onclick = () => { modal.classList.remove('show'); resolve(null); };
-    
-    document.getElementById('confirmAuthModalBtn').onclick = () => {
-      modal.classList.remove('show');
-      resolve(input.value);
-    };
-
-    input.onkeypress = (e) => {
-      if (e.key === 'Enter') {
-        modal.classList.remove('show');
-        resolve(input.value);
-      }
-    };
-  });
-}
-
 window.teamFetch = async function(url, options = {}) {
-  const activeId = getActiveTeamId();
-  if (!options.headers) options.headers = {};
-  
-  const savedPwd = sessionStorage.getItem('team_pwd_' + activeId);
-  if (savedPwd) {
-    options.headers['X-Team-Password'] = savedPwd;
-  }
-
-  let res = await fetch(url, options);
-  
-  // If unauthorized due to password
-  if (res.status === 401) {
-    const data = await res.clone().json().catch(() => ({}));
-    if (data.isLocked) {
-      const pwd = await promptTeamPassword();
-      if (pwd === null) {
-        throw new Error('Canceled password entry');
-      }
-      sessionStorage.setItem('team_pwd_' + activeId, pwd);
-      options.headers['X-Team-Password'] = pwd;
-      res = await fetch(url, options);
-    }
-  }
-
-  return res;
+  return await fetch(url, options);
 };
 
 function showCreateTeamModal() {
   injectModalHtml();
   const modal = document.getElementById('createTeamModal');
   const input = document.getElementById('newTeamNameInput');
-  const pwdInput = document.getElementById('newTeamPasswordInput');
   input.value = '';
-  if (pwdInput) pwdInput.value = '';
   modal.classList.add('show');
   input.focus();
 }
@@ -281,31 +181,27 @@ function hideCreateTeamModal() {
 
 async function submitNewTeam() {
   const name = document.getElementById('newTeamNameInput').value.trim();
-  const pwdInput = document.getElementById('newTeamPasswordInput');
-  const password = pwdInput ? pwdInput.value.trim() : '';
   if (!name) return;
 
   const btn = document.getElementById('confirmModalBtn');
-  btn.disabled = true;
   btn.textContent = 'Creating...';
+  btn.disabled = true;
 
   try {
     const res = await fetch('/api/teams', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, password })
+      body: JSON.stringify({ name })
     });
     const data = await res.json();
     if (data.ok) {
       localStorage.setItem('activeTeamId', data.team.id);
-      if (password) sessionStorage.setItem('team_pwd_' + data.team.id, password);
       window.location.href = '/setup'; 
     }
   } catch (err) {
-    alert('Failed to create team');
-  } finally {
-    btn.disabled = false;
+    console.error('Failed to create team', err);
     btn.textContent = 'Create Team';
+    btn.disabled = false;
   }
 }
 

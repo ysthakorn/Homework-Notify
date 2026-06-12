@@ -36,11 +36,15 @@ async function loadTeamConfig() {
         <label>LINE Group ID (to)</label>
         <input name="lineGroupId" type="text" value="${team.lineGroupId || ''}">
         
-        <label>Google Sheet CSV URL</label>
-        <input name="googleSheetCsvUrl" type="text" value="${team.googleSheetCsvUrl || ''}">
+        <label>Google Sheet ID <span style="font-size: 0.75rem; color: var(--muted); font-weight: normal;">(e.g. 1a2b3c4d5e...)</span></label>
+        <input name="googleSheetId" type="text" value="${team.googleSheetId || ''}">
         
-        <label>Password <span style="font-size: 0.75rem; color: var(--muted); font-weight: normal;">(Leave blank to keep unchanged, or clear to remove)</span></label>
-        <input name="password" type="password" value="" placeholder="Enter new password to lock team">
+        <label>API Key (For External Integrations) <span style="font-size: 0.75rem; color: var(--muted); font-weight: normal;">(Auto-generated)</span></label>
+        <div style="display:flex; gap:8px; margin-bottom: 16px;">
+          <input id="apiKeyInput" type="password" value="${team.apiKey || ''}" readonly style="flex:1; background: var(--bg); cursor: text;">
+          <button type="button" class="ghost" onclick="toggleApiKey()" style="border: 1px solid var(--border);">Show</button>
+          <button type="button" class="ghost" onclick="regenApiKey()" style="border: 1px solid var(--border); color: var(--primary);">Regenerate</button>
+        </div>
       `;
       
       currentTeamData = team;
@@ -82,10 +86,6 @@ envForm.onsubmit = async (e) => {
   const formData = new FormData(envForm);
   const payload = Object.fromEntries(formData);
   
-  if (!payload.password) {
-    delete payload.password; // Keep unchanged
-  }
-
   try {
     const fetcher = window.teamFetch || fetch;
     const res = await fetcher(`/api/teams/${teamId}`, {
@@ -189,6 +189,38 @@ async function saveMembers() {
     status.style.color = '#ef4444';
   }
 }
+
+window.toggleApiKey = function() {
+  const input = document.getElementById('apiKeyInput');
+  const btn = event.currentTarget;
+  if (input.type === 'password') {
+    input.type = 'text';
+    btn.textContent = 'Hide';
+  } else {
+    input.type = 'password';
+    btn.textContent = 'Show';
+  }
+};
+
+window.regenApiKey = async function() {
+  if (!confirm('Are you sure you want to regenerate the API Key? Any external systems using the old key will lose access.')) return;
+  const teamId = currentTeamData.id;
+  const fetcher = window.teamFetch || fetch;
+  try {
+    const res = await fetcher(`/api/teams/${teamId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ regenerateApiKey: true })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      document.getElementById('apiKeyInput').value = data.team.apiKey;
+      setStatus('API Key regenerated successfully', false);
+    }
+  } catch (e) {
+    setStatus('Failed to regenerate key', true);
+  }
+};
 
 window.addEventListener('teamChanged', loadTeamConfig);
 document.addEventListener('DOMContentLoaded', loadTeamConfig);

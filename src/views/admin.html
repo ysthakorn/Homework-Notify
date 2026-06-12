@@ -165,7 +165,7 @@
                   <tr>
                     <th>Team Name</th>
                     <th>Owner</th>
-                    <th>Lock Status</th>
+                    <th>API Key</th>
                     <th>Action</th>
                   </tr>
                 </thead>
@@ -225,7 +225,7 @@
             <tr>
               <td><strong>${t.name}</strong></td>
               <td>${t.owner || 'Unknown'}</td>
-              <td>${t.password ? 'Locked 🔒' : 'Open 🌐'}</td>
+              <td><code>${t.apiKey ? t.apiKey.substring(0,8) + '...' : 'None'}</code></td>
               <td>
                 <button class="btn-success" style="padding:4px 8px; font-size:0.75rem;" onclick="impersonateTeam('${t.id}')">Switch to Team</button>
               </td>
