@@ -1,0 +1,156 @@
+/* Minimal styles to supplement main-assets/styles.css */
+
+.student-layout {
+  display: flex;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.student-main {
+  width: 100%;
+  max-width: 480px;
+  margin-left: 0 !important;
+  padding: 0;
+}
+
+.request-item {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: border-color 0.2s;
+}
+
+.request-item:hover {
+  border-color: var(--primary);
+}
+
+.request-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.request-title {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.request-badge {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: var(--warning);
+  color: #fff;
+  font-weight: 600;
+}
+
+.request-detail {
+  font-size: 0.85rem;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+/* Animations */
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-entrance {
+  animation: fadeSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+}
+
+.delay-1 { animation-delay: 0.1s; }
+.delay-2 { animation-delay: 0.2s; }
+.delay-3 { animation-delay: 0.3s; }
+
+/* Custom Select Dropdown */
+.custom-select {
+  position: relative;
+  width: 100%;
+}
+
+.custom-select-trigger {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  color: var(--ink);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.custom-select-trigger:hover, .custom-select.open .custom-select-trigger {
+  border-color: var(--primary);
+  background: var(--bg-hover);
+}
+
+.custom-select-trigger .arrow {
+  transition: transform 0.2s ease;
+  width: 16px;
+  height: 16px;
+  opacity: 0.7;
+}
+
+.custom-select.open .custom-select-trigger .arrow {
+  transform: rotate(180deg);
+}
+
+.custom-options {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg);
+  z-index: 50;
+  max-height: 250px;
+  overflow-y: auto;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-5px);
+  transition: all 0.2s ease;
+}
+
+.custom-select.open .custom-options {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.custom-option {
+  padding: 10px 14px;
+  cursor: pointer;
+  color: var(--ink);
+  transition: background 0.15s;
+}
+
+.custom-option:hover {
+  background: var(--bg-hover);
+}
+
+.custom-option.selected {
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.custom-option.disabled {
+  color: var(--muted);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+

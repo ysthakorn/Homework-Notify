@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HW Notifier · Setup</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/styles.css">
+  <script src="/assets/theme.js"></script>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="sidebar-logo">HW</div>
+        <span class="sidebar-name">HW Notifier</span>
+      </div>
+            <nav class="sidebar-nav">
+        <a class="sidebar-link " href="/">
+          <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          Dashboard
+        </a>
+        <a class="sidebar-link " href="/homework">
+          <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><line x1="12" y1="6" x2="12" y2="14"/><line x1="8" y1="10" x2="16" y2="10"/></svg>
+          Homework
+        </a>
+        <a class="sidebar-link is-active" href="/setup">
+          <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Setup
+        </a>
+        <a class="sidebar-link " href="/docs">
+          <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          API Docs
+        </a>
+        <a class="sidebar-link " href="/status">
+          <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Status
+        </a>
+      </nav>
+      <div class="sidebar-footer">v1.0.0 · Node.js + Express</div>
+    </aside>
+
+        <div class="mobile-nav">
+      <a class="" href="/">Dashboard</a>
+      <a class="" href="/homework">Homework</a>
+      <a class="is-active" href="/setup">Setup</a>
+      <a class="" href="/docs">Docs</a>
+      <a class="" href="/status">Status</a>
+    </div>
+
+    <main class="main">
+      <div class="page-header">
+        <div class="page-header-info">
+        <h1>Setup</h1>
+        <p>ตั้งค่าทีม, รายชื่อนักเรียน และ LINE Token ได้จากหน้านี้</p>
+      </div>
+        <div class="team-switcher-wrapper">
+          <span class="team-switcher-label">TEAM</span>
+          <select class="globalTeamSelect"></select>
+        </div>
+      </div>
+
+      <div class="section-gap">
+        <!-- Team Config -->
+        <div class="card">
+          <form id="envForm">
+            <div class="panel-title">
+              <div class="card-title" style="margin-bottom:0">
+                Team Configuration
+              </div>
+              <div style="display:flex;gap:8px;align-items:center">
+                <span class="status-msg" id="envStatus"></span>
+                <button type="button" id="deleteTeamBtn" class="ghost" style="color: #ef4444; border: 1px solid #ef4444;">Delete Team</button>
+                <button type="submit" class="btn-success">Save</button>
+              </div>
+            </div>
+            <div id="envFields" class="env-fields">
+              <div class="muted" style="padding:12px 0">กำลังโหลด...</div>
+            </div>
+          </form>
+        </div>
+
+        <!-- Students Roster -->
+        <div class="card" id="studentsCard" style="display: none;">
+          <div class="panel-title">
+            <h2 class="card-title" style="margin-bottom:0">
+              <svg style="width:18px;height:18px;margin-right:6px;opacity:0.7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              รายชื่อนักเรียน <span id="studentCount" class="muted" style="font-weight:400;font-size:0.8rem"></span>
+            </h2>
+            <button type="button" class="ghost" onclick="toggleBulkInput()" style="font-size:0.8rem">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+              เพิ่มทีเดียวหลายคน
+            </button>
+          </div>
+          <p class="muted" style="margin-bottom: 12px; font-size: 0.85rem;">กรอกรายชื่อนักเรียนที่ต้องส่งงาน — ใช้สำหรับติดตามสถานะการส่งในหน้า Homework</p>
+          
+          <!-- Bulk Input Area (hidden by default) -->
+          <div id="bulkInputArea" style="display:none;margin-bottom:16px">
+            <label>วางรายชื่อ (รูปแบบ: ชื่อ, อีเมล - บรรทัดละ 1 คน)</label>
+            <textarea id="bulkStudentInput" rows="5" placeholder="สมชาย, somchai@school.ac.th&#10;สมหญิง, somying@school.ac.th&#10;สมศรี"></textarea>
+            <button type="button" class="btn-success" onclick="bulkAddStudents()" style="width:100%;justify-content:center;margin-top:4px">เพิ่มทั้งหมด</button>
+          </div>
+
+          <!-- Student List -->
+          <div id="studentsList" style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px;">
+            <!-- Render students here -->
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="newStudentName" placeholder="ชื่อนักเรียน" style="flex: 1;" autocomplete="off">
+            <input type="email" id="newStudentEmail" placeholder="อีเมล (ถ้ามี)" style="flex: 1;" autocomplete="off">
+            <button type="button" class="btn-success" id="addStudentBtn">เพิ่ม</button>
+          </div>
+          <p id="studentStatus" style="font-size: 0.8rem; margin-top: 8px;"></p>
+        </div>
+
+        <!-- Members Editor -->
+        <div class="card" id="membersCard" style="display: none;">
+          <h2 class="card-title">Team Members (Access Control)</h2>
+          <p class="muted" style="margin-bottom: 12px; font-size: 0.85rem;">Share this team with specific emails so they can manage and view it without needing the password.</p>
+          <div id="membersList" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;">
+            <!-- Render members here -->
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <input type="email" id="newMemberEmail" placeholder="Enter member's email address" style="flex: 1; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg);" autocomplete="off">
+            <button type="button" class="btn-success" id="addMemberBtn">Add Member</button>
+          </div>
+          <p id="memberStatus" style="font-size: 0.8rem; margin-top: 8px;"></p>
+        </div>
+
+        <!-- Guide -->
+        <div class="card">
+          <div class="card-title">วิธีขอ Token และ Group ID</div>
+          <div class="grid-auto">
+            <div>
+              <strong style="font-size:0.82rem;color:var(--ink-secondary)">LINE Access Token</strong>
+              <ul class="list">
+                <li>เปิด LINE Developers และสร้าง Provider</li>
+                <li>สร้าง Messaging API Channel</li>
+                <li>คัดลอก Channel Access Token (Long-lived)</li>
+              </ul>
+            </div>
+            <div>
+              <strong style="font-size:0.82rem;color:var(--ink-secondary)">Group ID</strong>
+              <ul class="list">
+                <li>เพิ่มบอทเข้ากลุ่ม LINE</li>
+                <li>ส่งข้อความเพื่อรับ webhook event</li>
+                <li>ดึง groupId จาก event payload</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/assets/setup.js"></script>
+  <script src="/assets/teams.js"></script>
+  <script src="/assets/transitions.js"></script>
+</body>
+</html>

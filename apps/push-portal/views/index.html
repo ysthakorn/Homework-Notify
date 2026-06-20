@@ -1,0 +1,680 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HW Notifier · Push Notifications</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <!-- Prevent flash of unstyled content: apply theme before render -->
+  <script>
+    (function() {
+      var mode = localStorage.getItem('theme-mode');
+      if (!mode || mode === 'system') {
+        mode = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+      }
+      var color = localStorage.getItem('theme-color') || 'indigo';
+      document.documentElement.setAttribute('data-theme', mode);
+      document.documentElement.setAttribute('data-color', color);
+    })();
+  </script>
+  <style>
+    /* ══ Design Tokens ══ */
+    :root {
+      --bg: #101019; --bg-sidebar: #16162a; --bg-card: #1a1a30;
+      --bg-input: #141425; --bg-hover: #1e1e38; --bg-table-header: #1e1e35;
+      --ink: #e2e2ef; --ink-secondary: #9d9db5; --muted: #6e6e8a;
+      --border: #2a2a45; --border-light: #232340;
+      --success: #22c55e; --success-soft: rgba(34,197,94,0.12);
+      --danger: #ef4444; --danger-soft: rgba(239,68,68,0.12);
+      --warning: #eab308;
+      --radius: 8px; --radius-sm: 6px;
+      --sidebar-w: 220px; --shadow-lg: 0 4px 16px rgba(0,0,0,0.5);
+      --primary: #6366f1; --primary-hover: #818cf8;
+      --primary-soft: rgba(99,102,241,0.12); --primary-glow: rgba(99,102,241,0.25);
+      --accent: var(--primary); --accent-hover: var(--primary-hover);
+      --accent-soft: var(--primary-soft); --accent-glow: var(--primary-glow);
+    }
+    [data-theme="light"] {
+      --bg: #f8fafc; --bg-sidebar: #ffffff; --bg-card: #ffffff;
+      --bg-input: #f1f5f9; --bg-hover: #f1f5f9; --bg-table-header: #f8fafc;
+      --ink: #0f172a; --ink-secondary: #475569; --muted: #64748b;
+      --border: #e2e8f0; --border-light: #f1f5f9;
+      --shadow-lg: 0 4px 16px rgba(0,0,0,0.08);
+    }
+    [data-color="blue"]    { --primary:#3b82f6; --primary-hover:#60a5fa; --primary-soft:rgba(59,130,246,.12); --primary-glow:rgba(59,130,246,.25); }
+    [data-color="emerald"] { --primary:#10b981; --primary-hover:#34d399; --primary-soft:rgba(16,185,129,.12); --primary-glow:rgba(16,185,129,.25); }
+    [data-color="rose"]    { --primary:#f43f5e; --primary-hover:#fb7185; --primary-soft:rgba(244,63,94,.12);  --primary-glow:rgba(244,63,94,.25); }
+    [data-color="violet"]  { --primary:#8b5cf6; --primary-hover:#a78bfa; --primary-soft:rgba(139,92,246,.12); --primary-glow:rgba(139,92,246,.25); }
+    [data-color="amber"]   { --primary:#f59e0b; --primary-hover:#fbbf24; --primary-soft:rgba(245,158,11,.12); --primary-glow:rgba(245,158,11,.25); }
+
+    @font-face {
+      font-family: 'LINE Seed Sans TH';
+      src: url('https://cdn.jsdelivr.net/gh/cpxdevth/LineSeedFont@main/Fonts/LINESeedSansTH_W_Bd.woff2') format('woff2');
+      font-weight: 700; font-display: swap;
+    }
+    @font-face {
+      font-family: 'LINE Seed Sans TH';
+      src: url('https://cdn.jsdelivr.net/gh/cpxdevth/LineSeedFont@main/Fonts/LINESeedSansTH_W_Rg.woff2') format('woff2');
+      font-weight: 400; font-display: swap;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg); color: var(--ink); min-height: 100vh;
+    }
+    h1,h2,h3,.card-title,.sidebar-name,.sidebar-logo {
+      font-family: 'LINE Seed Sans TH', 'Sarabun', sans-serif;
+    }
+    a { color: inherit; text-decoration: none; }
+
+    /* ══ Layout ══ */
+    .layout { display: flex; min-height: 100vh; }
+
+    /* ══ Sidebar ══ */
+    .sidebar {
+      width: var(--sidebar-w); background: var(--bg-sidebar);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      position: fixed; top: 0; left: 0; bottom: 0; z-index: 10; overflow-y: auto;
+    }
+    .sidebar-brand {
+      padding: 20px 18px 16px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .sidebar-logo {
+      width: 28px; height: 28px; background: var(--accent);
+      border-radius: var(--radius-sm); display: flex; align-items: center;
+      justify-content: center; font-weight: 800; font-size: 0.8rem;
+      color: white; flex-shrink: 0;
+    }
+    .sidebar-name { font-weight: 700; font-size: 0.9rem; letter-spacing: -0.01em; }
+    .sidebar-nav {
+      padding: 12px 10px; display: flex; flex-direction: column; gap: 2px; flex: 1;
+    }
+    .sidebar-link {
+      display: flex; align-items: center; gap: 10px; padding: 9px 12px;
+      border-radius: var(--radius-sm); font-size: 0.855rem; color: var(--ink-secondary);
+      transition: background 0.12s, color 0.12s; cursor: pointer; border: none;
+      background: transparent; width: 100%; text-align: left; font-family: inherit;
+    }
+    .sidebar-link:hover { background: var(--bg-hover); color: var(--ink); }
+    .sidebar-link.is-active {
+      background: var(--accent-soft); color: var(--accent-hover); font-weight: 600;
+    }
+    .sidebar-icon { width: 18px; height: 18px; opacity: 0.7; flex-shrink: 0; }
+    .sidebar-link.is-active .sidebar-icon { opacity: 1; }
+    .sidebar-footer {
+      padding: 14px 18px; border-top: 1px solid var(--border);
+      font-size: 0.72rem; color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+      display: flex; flex-direction: column; align-items: stretch; gap: 10px;
+    }
+
+    /* ══ Mobile nav ══ */
+    .mobile-nav {
+      display: none; background: var(--bg-sidebar); border-bottom: 1px solid var(--border);
+      padding: 10px 16px; gap: 4px; flex-wrap: wrap; position: sticky; top: 0; z-index: 10;
+    }
+    .mobile-nav a {
+      padding: 7px 14px; border-radius: var(--radius-sm); font-size: 0.82rem;
+      color: var(--ink-secondary); transition: background 0.12s, color 0.12s; cursor: pointer;
+    }
+    .mobile-nav a:hover { background: var(--bg-hover); color: var(--ink); }
+    .mobile-nav a.is-active { background: var(--accent-soft); color: var(--accent-hover); font-weight: 600; }
+
+    /* ══ Main ══ */
+    .main {
+      margin-left: var(--sidebar-w); flex: 1; padding: 40px; max-width: 900px;
+      animation: pageEnter 0.25s cubic-bezier(0,0,0.2,1) forwards;
+    }
+    @keyframes pageEnter {
+      from { opacity:0; transform:translateY(12px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    .page-header {
+      margin-bottom: 24px; display: flex; align-items: flex-start;
+      justify-content: space-between; flex-wrap: wrap; gap: 16px;
+    }
+    .page-header h1 { font-size: 1.8rem; margin-bottom: 4px; }
+    .page-header p { color: var(--muted); font-size: 0.875rem; }
+
+    /* ══ Cards ══ */
+    .card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px; min-width: 0;
+      transition: border-color 0.2s ease;
+    }
+    .card:hover { border-color: #52525b; }
+    .card-title {
+      font-size: 0.88rem; font-weight: 700; margin-bottom: 14px;
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    }
+    .stack { display: grid; gap: 16px; }
+    .grid-2 { display: grid; grid-template-columns: repeat(2,1fr); gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+
+    /* ══ Status banner ══ */
+    .status-banner {
+      border-radius: var(--radius-sm); padding: 12px 16px;
+      display: flex; align-items: center; gap: 10px;
+      font-size: 0.85rem; font-weight: 500; margin-bottom: 16px; transition: all 0.25s;
+    }
+    .status-banner.idle    { background:var(--bg-input); border:1px solid var(--border); color:var(--ink-secondary); }
+    .status-banner.ok      { background:var(--success-soft); border:1px solid rgba(34,197,94,.25); color:var(--success); }
+    .status-banner.error   { background:var(--danger-soft); border:1px solid rgba(239,68,68,.25); color:var(--danger); }
+    .status-banner.loading { background:var(--primary-soft); border:1px solid var(--primary-glow); color:var(--accent-hover); }
+    .dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; background:currentColor; }
+    .dot.pulse { animation: pulse 1.5s ease infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:.4;transform:scale(.6);} }
+
+    /* ══ Buttons ══ */
+    button, .btn {
+      background: var(--primary); color: #fff; border: 1px solid transparent;
+      padding: 9px 18px; border-radius: var(--radius); font-family: inherit;
+      font-weight: 600; font-size: 0.88rem; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s ease;
+    }
+    button:hover,.btn:hover { background: var(--primary-hover); }
+    button:active,.btn:active { transform: scale(0.97); }
+    button:disabled,.btn:disabled { opacity:.4; cursor:not-allowed; transform:none !important; }
+    .btn-full { width:100%; justify-content:center; }
+    .ghost { background:transparent; color:var(--ink-secondary); border:1px solid var(--border); }
+    .ghost:hover { background:var(--bg-hover); color:var(--ink); }
+    .danger-btn { background:transparent; color:var(--danger); border:1px solid rgba(239,68,68,.3); }
+    .danger-btn:hover { background:var(--danger-soft); }
+
+    /* ══ Stats ══ */
+    .stat-card { text-align:center; padding:24px 16px; }
+    .stat-title { font-size:.88rem; font-weight:600; color:var(--ink-secondary); margin-bottom:8px; }
+    .stat-value {
+      font-size:2.2rem; font-weight:700; color:var(--ink);
+      font-family:'JetBrains Mono',monospace; line-height:1.1; margin-bottom:4px;
+    }
+    .stat-desc { font-size:.75rem; color:var(--muted); }
+
+    /* ══ Team checkboxes ══ */
+    .team-list { display: flex; flex-direction: column; gap: 8px; }
+    .team-item {
+      display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+      border-radius: var(--radius-sm); border: 1px solid var(--border);
+      background: var(--bg-input); cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .team-item:hover { border-color: var(--primary); background: var(--bg-hover); }
+    .team-item.selected { border-color: var(--primary); background: var(--primary-soft); }
+    .team-item input[type="checkbox"] { width:16px; height:16px; accent-color: var(--primary); cursor:pointer; }
+    .team-item-name { font-size: 0.88rem; font-weight: 500; flex: 1; }
+    .team-hint { font-size:0.78rem; color:var(--muted); margin-top:8px; }
+
+    /* ══ Notification inbox ══ */
+    .notif-list { display:flex; flex-direction:column; gap:8px; max-height:400px; overflow-y:auto; }
+    .notif-item {
+      background:var(--bg-input); border:1px solid var(--border-light);
+      border-radius:var(--radius-sm); padding:12px 14px;
+      display:flex; gap:12px; align-items:flex-start; animation:slideIn .2s ease;
+    }
+    @keyframes slideIn { from{opacity:0;transform:translateY(-4px);} to{opacity:1;transform:translateY(0);} }
+    .notif-icon {
+      width:34px; height:34px; background:var(--accent-soft);
+      border-radius:var(--radius-sm); display:flex; align-items:center;
+      justify-content:center; font-size:16px; flex-shrink:0;
+    }
+    .notif-body { flex:1; min-width:0; }
+    .notif-title { font-size:.84rem; font-weight:600; color:var(--ink); margin-bottom:2px; }
+    .notif-text  { font-size:.78rem; color:var(--ink-secondary); line-height:1.5; }
+    .notif-time  { font-size:.72rem; color:var(--muted); margin-top:4px; font-family:'JetBrains Mono',monospace; }
+    .empty-state { text-align:center; padding:32px 16px; color:var(--muted); font-size:.83rem; line-height:1.6; }
+    .muted { color:var(--muted); font-size:.78rem; }
+    .hint  { color:var(--muted); font-size:.78rem; margin-top:10px; line-height:1.5; }
+
+    /* ══ Alert ══ */
+    .alert { border-radius:var(--radius-sm); padding:12px 14px; font-size:.83rem; line-height:1.6; margin-bottom:12px; }
+    .alert-warn { background:rgba(234,179,8,.1); border:1px solid rgba(234,179,8,.25); color:var(--warning); }
+    .alert-err  { background:var(--danger-soft); border:1px solid rgba(239,68,68,.25); color:var(--danger); }
+
+    /* ══ Modal ══ */
+    .modal-overlay {
+      position:fixed; top:0;left:0;right:0;bottom:0;
+      background:rgba(0,0,0,.6); backdrop-filter:blur(2px);
+      display:none; align-items:center; justify-content:center; z-index:999; padding:20px;
+    }
+    .modal-overlay.show { display:flex; }
+    .modal-content {
+      background:var(--bg-sidebar); border:1px solid var(--border); border-radius:8px;
+      width:100%; max-width:320px; box-shadow:0 10px 25px rgba(0,0,0,.5);
+      animation:modalIn .2s cubic-bezier(0,0,.2,1) forwards;
+    }
+    @keyframes modalIn { from{opacity:0;transform:scale(.95) translateY(10px);} to{opacity:1;transform:scale(1) translateY(0);} }
+    .modal-header {
+      display:flex; justify-content:space-between; align-items:center;
+      padding:16px 20px; border-bottom:1px solid var(--border);
+    }
+    .modal-header h2 { font-size:1.1rem; margin:0; }
+    .modal-close {
+      background:transparent; border:none; font-size:1.5rem;
+      color:var(--muted); cursor:pointer; padding:0; line-height:1;
+    }
+    .modal-close:hover { color:var(--ink); background:transparent; }
+    .modal-body { padding:20px; }
+
+    /* ══ Theme buttons ══ */
+    .btn-theme-mode {
+      flex:1; padding:6px 12px; border:1px solid var(--border);
+      background:var(--bg); color:var(--ink); border-radius:4px;
+      font-size:.8rem; font-weight:600; cursor:pointer; transition:all .2s;
+    }
+    .btn-theme-color {
+      width:28px; height:28px; padding:0; flex-shrink:0; border-radius:50%;
+      border:none; cursor:pointer; transition:transform .2s,box-shadow .2s;
+    }
+
+    /* ══ Responsive ══ */
+    @media (max-width:860px) {
+      .sidebar { display:none; }
+      .layout { flex-direction:column; }
+      .mobile-nav { display:flex !important; }
+      .main { margin-left:0; padding:20px 20px 40px; max-width:100%; }
+      .grid-2,.grid-3 { grid-template-columns:1fr; }
+    }
+    @media (max-width:540px) {
+      .main { padding:16px 14px 36px; }
+      .page-header h1 { font-size:1.3rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- ══ Sidebar ══ -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-logo">HW</div>
+      <span class="sidebar-name">HW Notifier</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="sidebar-link" href="/homework">
+        <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><line x1="12" y1="6" x2="12" y2="14"/><line x1="8" y1="10" x2="16" y2="10"/></svg>
+        Homework
+      </a>
+      <a class="sidebar-link is-active" href="/">
+        <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        Push Notify
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span>Push Portal · 8082</span>
+        <button id="themeToggleBtn" style="background:transparent;border:none;color:var(--muted);cursor:pointer;padding:4px;display:flex;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <div class="mobile-nav">
+    <a href="/homework">Homework</a>
+    <a class="is-active" href="/">Push Notify</a>
+    <a href="javascript:void(0)" onclick="document.getElementById('themeModal').classList.add('show'); updateThemeUI();">Appearance</a>
+  </div>
+
+  <!-- ══ Main ══ -->
+  <main class="main">
+    <div class="page-header">
+      <div>
+        <h1>Push Notifications</h1>
+        <p>รับการแจ้งเตือนการบ้านโดยตรงบนเบราว์เซอร์ ใช้แทน LINE เมื่อโควต้าหมด</p>
+      </div>
+    </div>
+
+    <div class="stack">
+
+      <!-- Not supported -->
+      <div id="notSupportedCard" style="display:none;">
+        <div class="card">
+          <div class="card-title">ไม่สามารถใช้งานได้</div>
+          <div class="alert alert-err" id="notSupportedReason">
+            ไม่รองรับ Web Push
+          </div>
+          <div class="hint">
+            Web Push Notification ต้องการ:<br>
+            1. เบราว์เซอร์ Chrome, Firefox, หรือ Edge เวอร์ชันล่าสุด<br>
+            2. <strong>หน้าเว็บต้องเปิดผ่าน HTTPS</strong> เท่านั้น (ไม่ใช่ HTTP)<br>
+            &nbsp;&nbsp;&nbsp;— ตรวจสอบว่า URL ขึ้นต้นด้วย <code style="font-family:'JetBrains Mono',monospace;background:var(--bg-input);padding:1px 6px;border-radius:3px;font-size:.8em;">https://</code>
+          </div>
+        </div>
+      </div>
+
+      <!-- Subscribe card -->
+      <div id="mainCard" class="card" style="display:none;">
+        <div class="card-title">สถานะการแจ้งเตือน</div>
+        <div id="statusBanner" class="status-banner idle">
+          <div id="statusDot" class="dot"></div>
+          <span id="statusText">กำลังตรวจสอบ...</span>
+        </div>
+        <div id="actionRow" class="stack" style="gap:8px;"></div>
+      </div>
+
+      <!-- Team selection -->
+      <div id="teamCard" class="card" style="display:none;">
+        <div class="card-title">
+          เลือกทีมที่ต้องการรับการแจ้งเตือน
+          <span class="muted" style="font-weight:400;">เลือกหลายทีมได้</span>
+        </div>
+        <div id="teamList" class="team-list">
+          <div class="empty-state" style="padding:16px;">กำลังโหลดทีม...</div>
+        </div>
+        <p class="team-hint">หากไม่เลือกทีม = รับทุกทีม &nbsp;|&nbsp; กดปุ่ม "บันทึกทีม" หลังเปลี่ยนการเลือก</p>
+        <div style="margin-top:12px;">
+          <button class="btn btn-full" id="saveTeamBtn" onclick="saveTeamSelection()" disabled>บันทึกทีมที่เลือก</button>
+        </div>
+      </div>
+
+
+
+      <!-- Inbox -->
+      <div class="card" id="inboxCard" style="display:none;">
+        <div class="card-title">
+          กล่องแจ้งเตือน
+          <span class="muted" id="inboxCount" style="font-family:'JetBrains Mono',monospace;">0</span>
+        </div>
+        <div class="notif-list" id="notifList">
+          <div class="empty-state">ยังไม่มีการแจ้งเตือน<br>สมัครรับแล้วรอการบ้านใหม่จากครู</div>
+        </div>
+        <div id="clearRow" style="margin-top:12px; display:none;">
+          <button class="ghost" style="font-size:.78rem;padding:6px 12px;" onclick="clearInbox()">ล้างประวัติ</button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- ══ Theme Modal ══ -->
+<div class="modal-overlay" id="themeModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Appearance</h2>
+      <button class="modal-close" onclick="document.getElementById('themeModal').classList.remove('show')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div style="margin-bottom:20px;">
+        <label style="display:block;margin-bottom:8px;font-weight:600;font-size:.85rem;color:var(--muted);">MODE</label>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-theme-mode" data-mode="system">System</button>
+          <button class="btn-theme-mode" data-mode="light">Light</button>
+          <button class="btn-theme-mode" data-mode="dark">Dark</button>
+        </div>
+      </div>
+      <div>
+        <label style="display:block;margin-bottom:8px;font-weight:600;font-size:.85rem;color:var(--muted);">COLOR</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn-theme-color" data-color="indigo" style="background:#6366f1;" title="Indigo"></button>
+          <button class="btn-theme-color" data-color="blue"   style="background:#3b82f6;" title="Blue"></button>
+          <button class="btn-theme-color" data-color="emerald" style="background:#10b981;" title="Emerald"></button>
+          <button class="btn-theme-color" data-color="amber"  style="background:#f59e0b;" title="Amber"></button>
+          <button class="btn-theme-color" data-color="rose"   style="background:#f43f5e;" title="Rose"></button>
+          <button class="btn-theme-color" data-color="violet" style="background:#8b5cf6;" title="Violet"></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══ Theme system (mirrors main app) ══
+function getTheme() {
+  let m = localStorage.getItem('theme-mode');
+  if (!m || m === 'system') m = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  return m;
+}
+function getColor() { return localStorage.getItem('theme-color') || 'indigo'; }
+function applyTheme() {
+  document.documentElement.setAttribute('data-theme', getTheme());
+  document.documentElement.setAttribute('data-color', getColor());
+}
+window.setThemeMode = function(m) { localStorage.setItem('theme-mode', m); applyTheme(); updateThemeUI(); };
+window.setThemeColor = function(c) { localStorage.setItem('theme-color', c); applyTheme(); updateThemeUI(); };
+window.updateThemeUI = function() {
+  const cm = localStorage.getItem('theme-mode') || 'system';
+  const cc = getColor();
+  document.querySelectorAll('.btn-theme-mode').forEach(b => {
+    const active = b.dataset.mode === cm;
+    b.style.background = active ? 'var(--primary)' : 'var(--bg)';
+    b.style.color = active ? '#fff' : 'var(--ink)';
+    b.style.borderColor = active ? 'var(--primary)' : 'var(--border)';
+  });
+  document.querySelectorAll('.btn-theme-color').forEach(b => {
+    const active = b.dataset.color === cc;
+    b.style.transform = active ? 'scale(1.2)' : 'scale(1)';
+    b.style.boxShadow = active ? '0 0 0 2px var(--bg-sidebar),0 0 0 4px var(--primary)' : 'none';
+  });
+};
+
+document.getElementById('themeToggleBtn').addEventListener('click', () => {
+  document.getElementById('themeModal').classList.add('show');
+  updateThemeUI();
+});
+document.getElementById('themeModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('themeModal')) document.getElementById('themeModal').classList.remove('show');
+});
+document.querySelectorAll('.btn-theme-mode').forEach(b => b.addEventListener('click', () => window.setThemeMode(b.dataset.mode)));
+document.querySelectorAll('.btn-theme-color').forEach(b => b.addEventListener('click', () => window.setThemeColor(b.dataset.color)));
+window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', e => {
+  if (!localStorage.getItem('theme-mode') || localStorage.getItem('theme-mode') === 'system') {
+    document.documentElement.setAttribute('data-theme', e.matches ? 'light' : 'dark');
+  }
+});
+
+// ══ Admin portal helper ══
+function openMain(path = '/') {
+  window.open(location.protocol + '//' + location.hostname + ':8080' + path, '_blank');
+}
+
+// ══ Inbox ══
+const INBOX_KEY = "hwnotify_inbox";
+function loadInbox() { try { return JSON.parse(localStorage.getItem(INBOX_KEY) || "[]"); } catch { return []; } }
+function saveInbox(items) { localStorage.setItem(INBOX_KEY, JSON.stringify(items.slice(0,50))); }
+function clearInbox() { saveInbox([]); renderInbox(); }
+function addToInbox(data) { const items = loadInbox(); items.unshift({...data, receivedAt: new Date().toISOString()}); saveInbox(items); renderInbox(); }
+function esc(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function fmtTime(iso) {
+  if (!iso) return "";
+  try { return new Date(iso).toLocaleString("th-TH",{day:"numeric",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit",timeZone:"Asia/Bangkok"}); }
+  catch { return iso; }
+}
+function renderInbox() {
+  const items = loadInbox();
+  document.getElementById("inboxCount").textContent = items.length;
+  document.getElementById("clearRow").style.display = items.length > 0 ? "block" : "none";
+  const list = document.getElementById("notifList");
+  list.innerHTML = items.length === 0
+    ? `<div class="empty-state">ยังไม่มีการแจ้งเตือน<br>สมัครรับแล้วรอการบ้านใหม่จากครู</div>`
+    : items.map(it => `
+        <div class="notif-item">
+          <div class="notif-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent-hover);"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
+          <div class="notif-body">
+            <div class="notif-title">${esc(it.title||"การแจ้งเตือนการบ้าน")}</div>
+            <div class="notif-text">${esc(it.body||"")}</div>
+            <div class="notif-time">${fmtTime(it.receivedAt||it.timestamp)}</div>
+            ${it.url && it.url !== '/' ? `<div style="margin-top:8px;"><a href="${esc(it.url)}" target="_blank" class="btn" style="padding:4px 10px; font-size:0.75rem;">ดูรายละเอียด</a></div>` : ''}
+          </div>
+        </div>`).join("");
+}
+
+// ══ UI state ══
+function setStatus(state, text) {
+  const b = document.getElementById("statusBanner");
+  b.className = "status-banner " + state;
+  document.getElementById("statusDot").className = "dot" + (state==="loading"?" pulse":"");
+  document.getElementById("statusText").textContent = text;
+}
+function setActions(html) { document.getElementById("actionRow").innerHTML = html; }
+async function loadSubCount() {
+  // Stats removed
+}
+
+// ══ Team picker ══
+let allTeams = [];
+let selectedTeamIds = JSON.parse(localStorage.getItem("push_teamIds")||"[]");
+
+async function loadTeams() {
+  try {
+    const d = await (await fetch("/api/teams")).json();
+    allTeams = d.teams || [];
+  } catch { allTeams = []; }
+  renderTeams();
+}
+
+function renderTeams() {
+  const list = document.getElementById("teamList");
+  if (allTeams.length === 0) {
+    list.innerHTML = `<div class="empty-state" style="padding:16px;">ไม่พบทีม</div>`;
+    return;
+  }
+  list.innerHTML = allTeams.map(t => {
+    const checked = selectedTeamIds.includes(t.id);
+    return `
+      <label class="team-item${checked?" selected":""}" data-tid="${t.id}">
+        <input type="checkbox" value="${t.id}" ${checked?"checked":""} onchange="onTeamCheck(this)">
+        <span class="team-item-name">${esc(t.name)}</span>
+      </label>`;
+  }).join("");
+}
+
+function onTeamCheck(cb) {
+  const tid = cb.value;
+  const label = cb.closest('.team-item');
+  if (cb.checked) { if (!selectedTeamIds.includes(tid)) selectedTeamIds.push(tid); label.classList.add("selected"); }
+  else { selectedTeamIds = selectedTeamIds.filter(x => x !== tid); label.classList.remove("selected"); }
+  document.getElementById("saveTeamBtn").disabled = false;
+}
+
+async function saveTeamSelection() {
+  localStorage.setItem("push_teamIds", JSON.stringify(selectedTeamIds));
+  if (!swReg) return;
+  const existingSub = await swReg.pushManager.getSubscription();
+  if (!existingSub) return;
+  try {
+    await fetch("/api/subscribe", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ subscription: existingSub.toJSON(), teamIds: selectedTeamIds }),
+    });
+    document.getElementById("saveTeamBtn").disabled = true;
+    setStatus("ok", "อัปเดตทีมที่เลือกเรียบร้อย");
+  } catch(e) {
+    setStatus("error", "บันทึกทีมล้มเหลว: " + e.message);
+  }
+}
+
+// ══ Web Push ══
+function urlB64(b64) {
+  const pad = "=".repeat((4-b64.length%4)%4);
+  const raw = atob((b64+pad).replace(/-/g,"+").replace(/_/g,"/"));
+  return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)));
+}
+let swReg = null;
+
+async function subscribe() {
+  setStatus("loading","กำลังขอสิทธิ์การแจ้งเตือน...");
+  setActions(`<button class="btn btn-full" disabled>กำลังดำเนินการ...</button>`);
+  try {
+    const perm = await Notification.requestPermission();
+    if (perm !== "granted") { setStatus("error","ไม่ได้รับสิทธิ์จากเบราว์เซอร์"); renderButtons("default"); return; }
+    setStatus("loading","กำลังสร้าง Subscription...");
+    const { publicKey } = await (await fetch("/api/vapid-public-key")).json();
+    const sub = await swReg.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey:urlB64(publicKey) });
+    await fetch("/api/subscribe", {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ subscription: sub.toJSON(), teamIds: selectedTeamIds }),
+    });
+    setStatus("ok","สมัครรับการแจ้งเตือนเรียบร้อยแล้ว");
+    renderButtons("subscribed");
+    document.getElementById("teamCard").style.display = "block";
+    loadSubCount();
+    await swReg.showNotification("สมัครสำเร็จ!", { body:"คุณจะได้รับการแจ้งเตือนการบ้านใหม่ทันที", tag:"welcome" });
+    addToInbox({ title:"สมัครสำเร็จ!", body:"คุณจะได้รับการแจ้งเตือนการบ้านใหม่ทันที" });
+  } catch(err) {
+    console.error(err);
+    setStatus("error","เกิดข้อผิดพลาด: " + err.message);
+    renderButtons("default");
+  }
+}
+
+async function unsubscribe() {
+  setStatus("loading","กำลังยกเลิก...");
+  try {
+    const sub = await swReg.pushManager.getSubscription();
+    if (sub) {
+      await fetch("/api/subscribe", { method:"DELETE", headers:{"Content-Type":"application/json"}, body:JSON.stringify({endpoint:sub.endpoint}) });
+      await sub.unsubscribe();
+    }
+    setStatus("idle","ยกเลิกการรับการแจ้งเตือนแล้ว");
+    renderButtons("default");
+    document.getElementById("teamCard").style.display = "none";
+    loadSubCount();
+  } catch(err) { setStatus("error","เกิดข้อผิดพลาด: "+err.message); }
+}
+
+function renderButtons(state) {
+  if (state === "subscribed") {
+    setActions(`<button class="danger-btn btn-full" onclick="unsubscribe()">ยกเลิกการรับการแจ้งเตือน</button>`);
+  } else {
+    setActions(`<button class="btn btn-full" onclick="subscribe()">รับการแจ้งเตือนการบ้าน</button>`);
+  }
+}
+
+// ══ Init ══
+async function init() {
+  const isSecure = location.protocol === "https:" || location.hostname === "localhost" || location.hostname === "127.0.0.1";
+  if (!isSecure) {
+    document.getElementById("notSupportedCard").style.display = "block";
+    document.getElementById("notSupportedReason").innerHTML =
+      `เปิดผ่าน <strong>HTTP</strong> ซึ่งไม่รองรับ Web Push<br>กรุณาเปิดผ่าน <strong>HTTPS</strong> (ผ่าน Cloudflare Tunnel)`;
+    return;
+  }
+  if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+    document.getElementById("notSupportedCard").style.display = "block";
+    document.getElementById("notSupportedReason").textContent = "เบราว์เซอร์ไม่รองรับ Service Worker กรุณาใช้ Chrome/Firefox/Edge ล่าสุด";
+    return;
+  }
+
+  document.getElementById("mainCard").style.display = "block";
+  document.getElementById("inboxCard").style.display = "block";
+  renderInbox();
+  loadSubCount();
+  loadTeams();
+
+  try {
+    swReg = await navigator.serviceWorker.register("/sw.js");
+    await navigator.serviceWorker.ready;
+    const perm = Notification.permission;
+    const existingSub = await swReg.pushManager.getSubscription();
+
+    if (perm === "denied") {
+      setStatus("error","ถูกบล็อก — ไปที่ Settings ของเบราว์เซอร์เพื่อเปิดใช้งาน");
+      setActions(`<button class="btn btn-full" disabled>ถูกบล็อก</button>`);
+    } else if (existingSub && perm === "granted") {
+      setStatus("ok","กำลังรับการแจ้งเตือนอยู่");
+      renderButtons("subscribed");
+      document.getElementById("teamCard").style.display = "block";
+    } else {
+      setStatus("idle","ยังไม่ได้สมัครรับการแจ้งเตือน");
+      renderButtons("default");
+    }
+  } catch(err) {
+    setStatus("error","Service Worker ล้มเหลว: " + err.message);
+    renderButtons("default");
+  }
+
+  navigator.serviceWorker.addEventListener("message", ev => {
+    if (ev.data?.type === "PUSH_RECEIVED") addToInbox(ev.data.payload);
+  });
+}
+
+init();
+</script>
+</body>
+</html>

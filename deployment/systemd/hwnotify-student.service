@@ -1,0 +1,13 @@
+[Unit]
+Description=HW Notifier Student Portal
+After=network.target
+
+[Service]
+Type=simple
+User=remote
+WorkingDirectory=/home/remote/hwnotify/Homework-Notify/student-portal
+ExecStart=/home/remote/.nvm/versions/node/v20.20.2/bin/node server.js
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

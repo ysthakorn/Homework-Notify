@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="th" data-theme="dark">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Student Portal · HW Notifier</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="/main-assets/styles.css">
+  <link rel="stylesheet" href="/assets/student-styles.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <link rel="stylesheet" type="text/css" href="https://npmcdn.com/flatpickr/dist/themes/dark.css">
+  <script src="/main-assets/theme.js"></script>
+</head>
+
+<body class="student-body">
+  <div class="layout student-layout">
+    <main class="main student-main">
+      <div class="page-header"
+        style="text-align: center; margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--border);">
+        <h1 style="color: var(--primary); font-size: 2rem;">Student Portal</h1>
+        <p class="muted">ส่งคำขอเพิ่มการบ้านเข้าระบบให้เพื่อนในห้อง</p>
+      </div>
+
+      <div class="card animate-entrance" style="padding: 28px; height: fit-content;">
+        <div class="card-title" style="font-size: 1rem; margin-bottom: 16px;">1. เลือกทีม / ห้องเรียน</div>
+        <form id="teamForm">
+          <!-- Custom Select HTML -->
+          <div class="custom-select" id="teamSelectContainer">
+            <div class="custom-select-trigger" id="teamSelectTrigger" style="padding: 12px 16px; font-size: 0.95rem;">
+              <span id="teamSelectLabel">-- กำลังโหลดข้อมูล... --</span>
+              <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </div>
+            <div class="custom-options" id="teamSelectOptions">
+              <!-- Options populated by JS -->
+            </div>
+          </div>
+          <!-- Hidden input to store the actual value -->
+          <input type="hidden" id="teamSelect" name="teamId" required>
+        </form>
+
+        <div id="requestSection" class="animate-entrance delay-1"
+          style="display: none; border-top: 1px solid var(--border); padding-top: 24px; margin-top: 24px;">
+          <div class="card-title" style="font-size: 1rem; margin-bottom: 16px;">2. รายละเอียดการบ้าน</div>
+          <form id="requestForm" style="display: flex; flex-direction: column; gap: 16px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+              <div>
+                <label style="font-size: 0.85rem;">วิชา (Subject) <span style="color: var(--danger);">*</span></label>
+                <input name="subject" required placeholder="เช่น Database Systems" style="margin-bottom: 0; padding: 10px 14px;">
+              </div>
+              <div>
+                <label style="font-size: 0.85rem;">หัวข้อ (Title) <span style="color: var(--danger);">*</span></label>
+                <input name="title" required placeholder="เช่น Lab 3" style="margin-bottom: 0; padding: 10px 14px;">
+              </div>
+            </div>
+
+            <div>
+              <label style="font-size: 0.85rem;">รายละเอียด (Detail)</label>
+              <textarea name="detail" rows="3" placeholder="รายละเอียดงาน หรือลิงก์โจทย์..." style="margin-bottom: 0; padding: 10px 14px; resize: vertical;"></textarea>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+              <div>
+                <label style="font-size: 0.85rem;">กำหนดส่ง (Due Date & Time)</label>
+                <input type="text" id="duePicker" name="due" placeholder="เลือกวันและเวลา..." style="margin-bottom: 0; padding: 10px 14px; background: var(--bg-input);">
+              </div>
+              <div>
+                <label style="font-size: 0.85rem;">โซนเวลา (Time Zone)</label>
+                <select name="timezone" style="width: 100%; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 9px 12px; font-size: 0.85rem; background: var(--bg-input); color: var(--ink);">
+                  <option value="+07:00" selected>Asia/Bangkok (GMT+7)</option>
+                  <option value="+00:00">UTC (GMT+0)</option>
+                  <option value="-08:00">Pacific Time (PT)</option>
+                  <option value="-05:00">Eastern Time (ET)</option>
+                  <option value="+09:00">Asia/Tokyo (GMT+9)</option>
+                </select>
+              </div>
+            </div>
+
+            <button type="submit" id="submitBtn" class="btn-success"
+              style="width:100%; justify-content:center; margin-top:8px; padding: 12px; font-size: 1rem; border-radius: 8px;">ส่งคำขอเพิ่มการบ้าน</button>
+            <div id="submitStatus" class="status-msg" style="text-align: center;"></div>
+          </form>
+        </div>
+      </div>
+
+    </main>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="/assets/student.js"></script>
+</body>
+
+</html>

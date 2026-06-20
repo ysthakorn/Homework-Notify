@@ -1,0 +1,16 @@
+[Unit]
+Description=HW Notifier - Push Portal (Web Push Notifications)
+After=network.target hwnotify.service
+
+[Service]
+Type=simple
+User=remote
+WorkingDirectory=/home/remote/hwnotify/Homework-Notify
+ExecStart=/home/remote/.nvm/versions/node/v20.20.2/bin/node push-portal/server.js
+Restart=always
+RestartSec=5
+Environment=NODE_ENV=production
+Environment=PATH=/home/remote/.nvm/versions/node/v20.20.2/bin:/usr/local/bin:/usr/bin:/bin
+
+[Install]
+WantedBy=multi-user.target

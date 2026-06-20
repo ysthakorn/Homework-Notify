@@ -1,122 +1,93 @@
 # HW-to-LINE Notifier
 
-**ระบบแจ้งเตือนการบ้านผ่าน LINE Group (Multi-Team Supported)**  
-สร้างด้วย Node.js, Express, LINE Messaging API, และ Google Sheets
+ระบบเว็บแอปพลิเคชันจัดการการบ้านและแจ้งเตือนผ่าน **LINE Group** (Multi-Team Supported) พัฒนาด้วย Node.js, Express, LINE Messaging API และมีระบบซิงค์ข้อมูลกับ Google Sheets โครงสร้างโปรเจกต์เป็นแบบ **Monorepo** เพื่อให้ง่ายต่อการนำไปพัฒนาต่อ
 
-[![Node.js](https://img.shields.io/badge/Node.js-%3E%3D20-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
-[![Express](https://img.shields.io/badge/Express-4.x-000000?logo=express&logoColor=white)](https://expressjs.com/)
-[![LINE](https://img.shields.io/badge/LINE-Messaging%20API-00C300?logo=line&logoColor=white)](https://developers.line.biz/)
 ---
 
 ## Features
 
-- **Multi-Team Support** — รองรับการจัดการหลายทีมในระบบเดียว สลับทีมได้ทันทีผ่านหน้าเว็บ
-- **Developer-focused UI** — หน้าตา Dashboard ดูทันสมัย รองรับการเปลี่ยน Theme (Light/Dark Mode และ Accent Colors) แบบ Real-time
-- **Access Control & Identity** — 
-  - รองรับ Cloudflare Access (อ่านอีเมลผู้ใช้จาก Header)
-  - ระบบ Team Ownership และ Team Members (แชร์สิทธิ์ให้คนอื่นในทีม)
-  - ระบบ Auto-Generated API Key สำหรับการเรียกใช้ผ่านระบบภายนอก
-- **Admin Panel & Audit Logs** — แผงควบคุมสำหรับผู้ดูแลระบบ สามารถดูประวัติการส่งการบ้าน (Audit Logs) และสวมรอย (Impersonate) เข้าไปยังทีมต่างๆ ได้
-- **Web-based Setup** — แก้ไขค่าตั้งค่า (LINE Token, Group ID, Google Sheet) ของแต่ละทีมได้จากหน้าเว็บโดยตรง ไม่ต้องแก้ไฟล์
-- **Google Sheet Integration** — โหลดรายการจากการบ้านจาก Google Sheet พร้อมปุ่ม "ส่งแถวนี้"
-- **LINE Push Message** — ส่งข้อความเข้า LINE Group ผ่าน Messaging API ด้วย Template ที่สวยงาม
+- **Micro-Portal Architecture**
+  - **Main Portal (Port 8080):** สำหรับครูและผู้ดูแลระบบในการสร้าง แจ้งเตือน และจัดการการบ้าน
+  - **Student Portal (Port 8081):** สำหรับนักเรียนใช้ยื่นการบ้านใหม่เข้าสู่ระบบ (สถานะ Pending Approval)
+  - **Push Portal (Port 8082):** ระบบ Web Push Notification สำหรับแจ้งเตือนผ่านเบราว์เซอร์
+- **Multi-Team Support** จัดการหลายกลุ่มเรียน/หลายวิชา ได้ในระบบเดียว สามารถสลับทีมได้ทันทีผ่าน Dashboard
+- **Google Sheet Integration** ดึงข้อมูลการส่งงานของนักเรียนจาก Google Sheet อัตโนมัติ พร้อมปุ่ม Sync ทันใจ
+- **Code Red Service** ระบบ Background Worker ที่คอยรันตรวจสอบและแจ้งเตือนการบ้านด่วนที่กำลังจะถึงกำหนดส่งในอีก 24 ชั่วโมง
+- **Zero-Trust Ready** ระบบ Main Portal รองรับการตรวจสอบสิทธิ์ผู้ใช้ผ่าน HTTP Headers ของ Cloudflare Access (อ่านอีเมลจาก `cf-access-authenticated-user-email`)
+- **JSON Based** เก็บข้อมูลโดยใช้ไฟล์ `.json` ไม่ต้องพึ่งพา Database Engine ภายนอก ทำให้ติดตั้งและ Deploy ง่ายมาก
 
 ---
 
 ## Project Structure
 
-```
+โปรเจกต์ถูกจัดเก็บในรูปแบบ **Monorepo** โดยแบ่งแอปพลิเคชันย่อยไว้ในโฟลเดอร์ `apps/`:
+
+```text
 .
-├── package.json
-└── src/
-    ├── app.js              # Express app setup & middleware
-    ├── server.js           # Server entry point (listen)
-    ├── config/
-    │   └── env.js          # Environment variables & Global defaults
-    ├── routes/
-    │   └── notifyRoutes.js # All route handlers (API & Views)
-    ├── services/
-    │   ├── auditService.js # ระบบบันทึกประวัติการใช้งาน
-    │   ├── envService.js   # อ่าน/เขียนไฟล์ config
-    │   ├── lineClient.js   # LINE Messaging API client
-    │   ├── messageBuilder.js # สร้างข้อความแจ้งเตือน + parse วันที่
-    │   ├── sheetService.js # โหลด & parse CSV จาก Google Sheet
-    │   └── teamService.js  # จัดการฐานข้อมูลและสิทธิ์ของ Teams
-    └── views/
-        ├── index.html      # Dashboard (ฟอร์มส่งแบบ Manual)
-        ├── sheet.html      # ตารางข้อมูลจาก Google Sheet
-        ├── setup.html      # หน้าตั้งค่าทีมและสมาชิก (ACL)
-        ├── admin.html      # แผงควบคุมสำหรับผู้ดูแลระบบ
-        ├── docs.html       # API documentation
-        ├── status.html     # System status
-        └── assets/         # CSS และ JS ฝั่ง Frontend ทั้งหมด
+├── apps/
+│   ├── main-portal/          # ระบบหลักสำหรับผู้ดูแลระบบ (Admin/Teacher)
+│   ├── student-portal/       # ระบบสำหรับนักเรียน (ยื่นเพิ่มการบ้าน)
+│   └── push-portal/          # ระบบแจ้งเตือน Web Push Notification
+├── data/                     # ฐานข้อมูล JSON (ถูกตั้ง ignore ไว้เพื่อความปลอดภัย)
+├── deployment/               # สคริปต์สำหรับการ Deploy (เช่น systemd)
+├── package.json              # กำหนด Dependencies และ NPM Scripts
+└── .env.example              # ไฟล์ตัวอย่างสำหรับการตั้งค่า Environment
 ```
 
 ---
 
 ## Getting Started
 
-### 1. Install dependencies
+### 1. Prerequisites
+- Node.js version 20 หรือใหม่กว่า
+- บัญชี [LINE Developers](https://developers.line.biz/) (เพื่อใช้ Messaging API)
 
+### 2. Installation
+โคลนโปรเจกต์ลงมาที่เครื่องและติดตั้ง Dependencies:
 ```bash
+git clone https://github.com/your-username/Homework-Notify-Project.git
+cd Homework-Notify-Project
 npm install
 ```
 
-### 2. Run the server
-
+### 3. Environment Variables
+คัดลอกไฟล์ตัวอย่างเพื่อสร้าง `.env` ของคุณเอง:
 ```bash
-npm start
+cp .env.example .env
+```
+*(สำหรับการใช้งานจริง ข้อมูลต่างๆ อย่างเช่น LINE Access Token ของแต่ละทีมจะถูกบันทึกลงในไฟล์ฐานข้อมูล JSON อัตโนมัติจากหน้าเว็บ Setup)*
+
+### 4. Running the Portals Locally
+ระบบถูกออกแบบให้แต่ละ Portal รันแยกกัน (คุณสามารถเปิด Terminal 3 หน้าจอเพื่อรันทุกพอร์ตพร้อมกันได้):
+
+**โหมด Development (มีการทำ Hot-reload):**
+```bash
+npm run dev           # รัน Main Portal (พอร์ต 8080)
+npm run dev:student   # รัน Student Portal (พอร์ต 8081)
+npm run dev:push      # รัน Push Portal (พอร์ต 8082)
 ```
 
-For development mode (auto reload with `--watch`):
-
+**โหมด Production:**
 ```bash
-npm run dev
+npm run start
+npm run start:student
+npm run start:push
 ```
 
-เปิด **http://localhost:8080** ในเบราว์เซอร์
+---
 
-### 3. Configure Teams
-
-แทนที่จะตั้งค่าในไฟล์ `.env` ระบบใหม่ให้คุณเข้าไปที่เมนู **Setup** ผ่านหน้าเว็บ เพื่อกรอกค่าต่างๆ (LINE Token, Group ID, Google Sheet URL) ของแต่ละทีมแยกกัน ระบบจะบันทึกข้อมูลลงไฟล์ JSON โดยอัตโนมัติ
+## Data Storage
+ระบบนี้จัดเก็บข้อมูลแบบ Local JSON Files ภายในโฟลเดอร์ `data/`:
+- ข้อมูลผู้ใช้ ข้อมูลทีม และรายการการบ้าน จะถูกบันทึกที่นี่
+- ระบบจะทำการสร้างไฟล์ `*.json` ให้โดยอัตโนมัติหากไม่พบไฟล์ในครั้งแรกที่รัน
+- โฟลเดอร์ `data/` จะถูกละเว้น (Ignored) ออกจากการ Commit บน GitHub เพื่อป้องกันข้อมูลส่วนตัวหรือความลับของระบบหลุดออกสู่สาธารณะ
 
 ---
 
-## Google Sheet Integration
-
-ใส่ URL แบบ CSV export ลงในหน้า Setup (หัวข้อ Google Sheet CSV URL) แล้วระบบจะโหลดรายการจาก Sheet อัตโนมัติ พร้อมปุ่ม "ส่งแถวนี้"
-
-### รองรับชื่อคอลัมน์แบบยืดหยุ่น
-
-ระบบจะจับคู่ชื่อคอลัมน์ใน Sheet กับฟิลด์ต่อไปนี้ (case-insensitive):
-
-| Field | Accepted Column Names |
-|---|---|
-| **subject** | `subject`, `subject_name`, `วิชา` |
-| **title** | `title`, `topic`, `หัวข้อ`, `งาน` |
-| **detail** | `detail`, `description`, `รายละเอียด` |
-| **due** | `due`, `due_date`, `date`, `กำหนดส่ง`, `วันที่` |
+## Documentation
+สำหรับข้อมูลเชิงลึก การตั้งค่า LINE API การซิงค์ Google Sheets หรือการตั้งค่าบน Production (Deploying) กรุณาอ่านต่อที่ [Doc.md](./Doc.md)
 
 ---
 
-## HTTP API Usage
-
-คุณสามารถยิง API จากระบบภายนอก (เช่น cURL, Postman) ได้ โดยต้องแนบ Header ยืนยันตัวตนของทีมนั้นๆ
-
-### Team Authentication Headers
-
-`X-API-Key: YOUR_API_KEY`
-
-ถ้าต้องการระบุ Team ID (ใน Query หรือ Body):
-`teamId=YOUR_TEAM_ID`
-
----
-
-## Admin Panel & Cloudflare Access
-
-ระบบถูกออกแบบมาให้รองรับการนำไปใช้คู่กับ **Cloudflare Access (Zero Trust)**
-โดยระบบจะอ่าน HTTP Headers ต่อไปนี้เพื่อยืนยันตัวตน:
-- `Cf-Access-Authenticated-User-Email`
-- `Cf-Access-Jwt-Assertion` (เพื่อถอดรหัสชื่อ)
-
-อีเมลที่ถูกกำหนดเป็น Admin ในโค้ดจะสามารถเข้าถึงหน้า `/admin` ได้เพื่อดู Audit Logs และเจาะเข้าระบบของทีมอื่นๆ ได้ทันที
+## License
+โปรเจกต์นี้ใช้งานภายใต้ลิขสิทธิ์ [MIT License](./LICENSE)

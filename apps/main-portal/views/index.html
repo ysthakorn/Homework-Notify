@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HW Notifier · Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/styles.css">
+  <script src="/assets/theme.js"></script>
+  <!-- Third-party libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="sidebar-logo">HW</div>
+        <span class="sidebar-name">HW Notifier</span>
+      </div>
+            <nav class="sidebar-nav">
+        <a class="sidebar-link is-active" href="/">
+          <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          Dashboard
+        </a>
+        <a class="sidebar-link " href="/homework">
+          <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><line x1="12" y1="6" x2="12" y2="14"/><line x1="8" y1="10" x2="16" y2="10"/></svg>
+          Homework
+        </a>
+        <a class="sidebar-link " href="/setup">
+          <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Setup
+        </a>
+        <a class="sidebar-link " href="/docs">
+          <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          API Docs
+        </a>
+        <a class="sidebar-link " href="/status">
+          <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Status
+        </a>
+      </nav>
+      <div class="sidebar-footer">v1.0.0 · Node.js + Express</div>
+    </aside>
+
+        <div class="mobile-nav">
+      <a class="is-active" href="/">Dashboard</a>
+      <a class="" href="/homework">Homework</a>
+      <a class="" href="/setup">Setup</a>
+      <a class="" href="/docs">Docs</a>
+      <a class="" href="/status">Status</a>
+    </div>
+
+    <main class="main">
+      <div class="page-header">
+        <div class="page-header-info">
+          <h1>Dashboard</h1>
+          <p>สรุปผลการส่งการบ้าน และติดตามสถานะความคืบหน้าของห้อง</p>
+        </div>
+        <div class="team-switcher-wrapper">
+          <span class="team-switcher-label">TEAM</span>
+          <select class="globalTeamSelect"></select>
+        </div>
+      </div>
+
+      <div class="section-gap" id="pdfContent" style="background:var(--bg); padding:16px; border-radius:var(--radius); border:1px solid transparent;">
+        <div class="dashboard-tabs" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom: 24px; border-bottom: 1px solid var(--border);" data-html2canvas-ignore>
+          <div style="display:flex; overflow-x:auto; gap:16px;">
+            <button type="button" class="tab-btn is-active" data-period="daily">รายวัน (Today)</button>
+            <button type="button" class="tab-btn" data-period="weekly">รายสัปดาห์ (This Week)</button>
+            <button type="button" class="tab-btn" data-period="monthly">รายเดือน (This Month)</button>
+            <button type="button" class="tab-btn" data-period="yearly">รายปี (This Year)</button>
+          </div>
+        </div>
+
+        <div class="grid-3" style="margin-bottom: 24px;">
+          <div class="card stat-card">
+            <div class="stat-title">การบ้านทั้งหมด</div>
+            <div class="stat-value" id="statAssigned">-</div>
+            <div class="stat-desc muted">ชิ้นที่สั่งในช่วงเวลานี้</div>
+          </div>
+          <div class="card stat-card">
+            <div class="stat-title">อัตราการส่งงาน</div>
+            <div class="stat-value" id="statSubmissionRate">-</div>
+            <div class="stat-desc muted">จากนักเรียนทั้งหมด</div>
+          </div>
+          <div class="card stat-card">
+            <div class="stat-title">คนทีค้างงานรวม</div>
+            <div class="stat-value" id="statMissing">-</div>
+            <div class="stat-desc muted" style="color:var(--danger)">รายการที่ยังไม่ส่ง</div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom: 24px;">
+          <div class="card-title">กราฟอัตราการส่งงาน (แยกตามการบ้าน)</div>
+          <div style="position: relative; height:300px; width:100%;">
+            <canvas id="hwChart"></canvas>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">ตารางสรุปผลรายบุคคล (Student Summary)</div>
+          <div style="overflow-x: auto;">
+            <table class="table" style="width:100%; text-align:left; border-collapse:collapse;">
+              <thead>
+                <tr style="border-bottom: 1px solid var(--border);">
+                  <th style="padding:12px; font-weight:600;">#</th>
+                  <th style="padding:12px; font-weight:600;">ชื่อนักเรียน</th>
+                  <th style="padding:12px; font-weight:600;">ส่งแล้ว (ชิ้น)</th>
+                  <th style="padding:12px; font-weight:600;">ค้างส่ง (ชิ้น)</th>
+                  <th style="padding:12px; font-weight:600;">สถานะ</th>
+                </tr>
+              </thead>
+              <tbody id="studentTableBody">
+                <tr><td colspan="5" class="muted" style="padding:12px;">กำลังโหลด...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/assets/dashboard.js"></script>
+  <script src="/assets/teams.js"></script>
+  <script src="/assets/transitions.js"></script>
+</body>
+</html>

@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HW Notifier · คู่มือการใช้งาน Push Notifications</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <script>
+    (function() {
+      var m = localStorage.getItem('theme-mode');
+      if (!m || m==='system') m = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', m);
+      document.documentElement.setAttribute('data-color', localStorage.getItem('theme-color')||'indigo');
+    })();
+  </script>
+  <style>
+    :root {
+      --bg:#101019;--bg-sidebar:#16162a;--bg-card:#1a1a30;--bg-input:#141425;--bg-hover:#1e1e38;
+      --ink:#e2e2ef;--ink-secondary:#9d9db5;--muted:#6e6e8a;
+      --border:#2a2a45;--border-light:#232340;
+      --success:#22c55e;--success-soft:rgba(34,197,94,.12);
+      --danger:#ef4444;--danger-soft:rgba(239,68,68,.12);
+      --warning:#eab308;
+      --radius:8px;--radius-sm:6px;--sidebar-w:220px;--shadow-lg:0 4px 16px rgba(0,0,0,.5);
+      --primary:#6366f1;--primary-hover:#818cf8;
+      --primary-soft:rgba(99,102,241,.12);--primary-glow:rgba(99,102,241,.25);
+      --accent:var(--primary);--accent-hover:var(--primary-hover);
+      --accent-soft:var(--primary-soft);--accent-glow:var(--primary-glow);
+    }
+    [data-theme="light"]{
+      --bg:#f8fafc;--bg-sidebar:#ffffff;--bg-card:#ffffff;--bg-input:#f1f5f9;--bg-hover:#f1f5f9;
+      --ink:#0f172a;--ink-secondary:#475569;--muted:#64748b;
+      --border:#e2e8f0;--border-light:#f1f5f9;--shadow-lg:0 4px 16px rgba(0,0,0,.08);
+    }
+    [data-color="blue"]    {--primary:#3b82f6;--primary-hover:#60a5fa;--primary-soft:rgba(59,130,246,.12);--primary-glow:rgba(59,130,246,.25);}
+    [data-color="emerald"] {--primary:#10b981;--primary-hover:#34d399;--primary-soft:rgba(16,185,129,.12);--primary-glow:rgba(16,185,129,.25);}
+    [data-color="rose"]    {--primary:#f43f5e;--primary-hover:#fb7185;--primary-soft:rgba(244,63,94,.12); --primary-glow:rgba(244,63,94,.25);}
+    [data-color="violet"]  {--primary:#8b5cf6;--primary-hover:#a78bfa;--primary-soft:rgba(139,92,246,.12);--primary-glow:rgba(139,92,246,.25);}
+    [data-color="amber"]   {--primary:#f59e0b;--primary-hover:#fbbf24;--primary-soft:rgba(245,158,11,.12);--primary-glow:rgba(245,158,11,.25);}
+
+    @font-face{font-family:'LINE Seed Sans TH';src:url('https://cdn.jsdelivr.net/gh/cpxdevth/LineSeedFont@main/Fonts/LINESeedSansTH_W_Bd.woff2') format('woff2');font-weight:700;font-display:swap;}
+    @font-face{font-family:'LINE Seed Sans TH';src:url('https://cdn.jsdelivr.net/gh/cpxdevth/LineSeedFont@main/Fonts/LINESeedSansTH_W_Rg.woff2') format('woff2');font-weight:400;font-display:swap;}
+
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Sarabun',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;}
+    h1,h2,h3,.sidebar-name,.sidebar-logo,.card-title{font-family:'LINE Seed Sans TH','Sarabun',sans-serif;}
+    a{color:inherit;text-decoration:none;}
+
+    /* Layout */
+    .layout{display:flex;min-height:100vh;}
+    .sidebar{width:var(--sidebar-w);background:var(--bg-sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:10;overflow-y:auto;}
+    .sidebar-brand{padding:20px 18px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+    .sidebar-logo{width:28px;height:28px;background:var(--accent);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.8rem;color:white;flex-shrink:0;}
+    .sidebar-name{font-weight:700;font-size:.9rem;letter-spacing:-.01em;}
+    .sidebar-nav{padding:12px 10px;display:flex;flex-direction:column;gap:2px;flex:1;}
+    .sidebar-link{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--radius-sm);font-size:.855rem;color:var(--ink-secondary);transition:background .12s,color .12s;cursor:pointer;border:none;background:transparent;width:100%;text-align:left;font-family:inherit;}
+    .sidebar-link:hover{background:var(--bg-hover);color:var(--ink);}
+    .sidebar-link.is-active{background:var(--accent-soft);color:var(--accent-hover);font-weight:600;}
+    .sidebar-icon{width:18px;height:18px;opacity:.7;flex-shrink:0;}
+    .sidebar-link.is-active .sidebar-icon{opacity:1;}
+    .sidebar-footer{padding:14px 18px;border-top:1px solid var(--border);font-size:.72rem;color:var(--muted);font-family:'JetBrains Mono',monospace;display:flex;justify-content:space-between;align-items:center;}
+
+    .mobile-nav{display:none;background:var(--bg-sidebar);border-bottom:1px solid var(--border);padding:10px 16px;gap:4px;flex-wrap:wrap;position:sticky;top:0;z-index:10;}
+    .mobile-nav a{padding:7px 14px;border-radius:var(--radius-sm);font-size:.82rem;color:var(--ink-secondary);transition:background .12s,color .12s;}
+    .mobile-nav a:hover{background:var(--bg-hover);color:var(--ink);}
+    .mobile-nav a.is-active{background:var(--accent-soft);color:var(--accent-hover);font-weight:600;}
+
+    .main{margin-left:var(--sidebar-w);flex:1;padding:40px;max-width:900px;animation:pageEnter .25s cubic-bezier(0,0,.2,1) forwards;}
+    @keyframes pageEnter{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+    .page-header{margin-bottom:32px;}
+    .page-header h1{font-size:1.8rem;margin-bottom:6px;}
+    .page-header p{color:var(--muted);font-size:.875rem;line-height:1.6;}
+
+    /* Cards */
+    .card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;min-width:0;transition:border-color .2s;}
+    .card:hover{border-color:#52525b;}
+    .card-title{font-size:.88rem;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+    .stack{display:grid;gap:20px;}
+
+    /* Step list */
+    .step-list{display:flex;flex-direction:column;gap:0;}
+    .step{display:flex;gap:16px;padding:16px 0;border-bottom:1px solid var(--border-light);position:relative;}
+    .step:last-child{border-bottom:none;padding-bottom:0;}
+    .step-num{width:32px;height:32px;border-radius:50%;background:var(--accent-soft);border:2px solid var(--accent);color:var(--accent-hover);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;flex-shrink:0;font-family:'JetBrains Mono',monospace;}
+    .step-body{flex:1;padding-top:4px;}
+    .step-title{font-weight:700;font-size:.92rem;margin-bottom:4px;color:var(--ink);}
+    .step-desc{font-size:.83rem;color:var(--ink-secondary);line-height:1.65;}
+
+    /* Info table */
+    .info-table{width:100%;border-collapse:collapse;font-size:.84rem;}
+    .info-table th,.info-table td{padding:10px 12px;border-bottom:1px solid var(--border-light);text-align:left;vertical-align:top;}
+    .info-table th{font-size:.76rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;background:var(--bg-input);}
+    .info-table td{color:var(--ink-secondary);}
+    .info-table td:first-child{color:var(--ink);font-weight:500;white-space:nowrap;}
+
+    /* Code snippet */
+    .code{font-family:'JetBrains Mono',monospace;font-size:.8rem;background:var(--bg-input);padding:2px 7px;border-radius:4px;border:1px solid var(--border-light);color:var(--accent-hover);}
+    .code-block{background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;font-family:'JetBrains Mono',monospace;font-size:.78rem;line-height:1.6;overflow:auto;color:var(--ink-secondary);}
+
+    /* Badge */
+    .badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;font-size:.72rem;font-weight:700;font-family:'JetBrains Mono',monospace;}
+    .badge-get{background:var(--success-soft);color:var(--success);}
+    .badge-post{background:var(--accent-soft);color:var(--accent-hover);}
+    .badge-del{background:var(--danger-soft);color:var(--danger);}
+
+    /* Alert */
+    .alert{border-radius:var(--radius-sm);padding:12px 14px;font-size:.83rem;line-height:1.6;}
+    .alert-info{background:var(--primary-soft);border:1px solid var(--primary-glow);color:var(--accent-hover);}
+    .alert-warn{background:rgba(234,179,8,.1);border:1px solid rgba(234,179,8,.25);color:var(--warning);}
+
+    /* Modal */
+    .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;z-index:999;padding:20px;}
+    .modal-overlay.show{display:flex;}
+    .modal-content{background:var(--bg-sidebar);border:1px solid var(--border);border-radius:8px;width:100%;max-width:320px;box-shadow:0 10px 25px rgba(0,0,0,.5);animation:modalIn .2s cubic-bezier(0,0,.2,1) forwards;}
+    @keyframes modalIn{from{opacity:0;transform:scale(.95) translateY(10px);}to{opacity:1;transform:scale(1) translateY(0);}}
+    .modal-header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border);}
+    .modal-header h2{font-size:1.1rem;margin:0;}
+    .modal-close{background:transparent;border:none;font-size:1.5rem;color:var(--muted);cursor:pointer;padding:0;line-height:1;}
+    .modal-close:hover{color:var(--ink);background:transparent;}
+    .modal-body{padding:20px;}
+    .btn-theme-mode{flex:1;padding:6px 12px;border:1px solid var(--border);background:var(--bg);color:var(--ink);border-radius:4px;font-size:.8rem;font-weight:600;cursor:pointer;transition:all .2s;font-family:inherit;}
+    .btn-theme-color{width:28px;height:28px;padding:0;flex-shrink:0;border-radius:50%;border:none;cursor:pointer;transition:transform .2s,box-shadow .2s;}
+
+    .muted{color:var(--muted);font-size:.78rem;}
+
+    @media (max-width:860px){
+      .sidebar{display:none;}.layout{flex-direction:column;}.mobile-nav{display:flex!important;}
+      .main{margin-left:0;padding:20px 20px 40px;max-width:100%;}
+    }
+    @media (max-width:540px){.main{padding:16px 14px 36px;}.page-header h1{font-size:1.3rem;}}
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-logo">HW</div>
+      <span class="sidebar-name">HW Notifier</span>
+    </div>
+    <nav class="sidebar-nav">
+      <button class="sidebar-link" onclick="openMain()">
+        <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </button>
+      <button class="sidebar-link" onclick="openMain('/homework')">
+        <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><line x1="12" y1="6" x2="12" y2="14"/><line x1="8" y1="10" x2="16" y2="10"/></svg>
+        Homework
+      </button>
+      <a class="sidebar-link" href="/">
+        <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        Push Notify
+      </a>
+      <a class="sidebar-link is-active" href="/document">
+        <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        คู่มือการใช้งาน
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <span>Push Portal · 8082</span>
+      <button id="themeToggleBtn" style="background:transparent;border:none;color:var(--muted);cursor:pointer;padding:4px;display:flex;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Mobile nav -->
+  <div class="mobile-nav">
+    <a href="javascript:void(0)" onclick="openMain()">Dashboard</a>
+    <a href="javascript:void(0)" onclick="openMain('/homework')">Homework</a>
+    <a href="/">Push Notify</a>
+    <a class="is-active" href="/document">คู่มือ</a>
+    <a href="javascript:void(0)" onclick="document.getElementById('themeModal').classList.add('show');updateThemeUI()">Appearance</a>
+  </div>
+
+  <!-- Main content -->
+  <main class="main">
+    <div class="page-header">
+      <h1>คู่มือการใช้งาน Push Notifications</h1>
+      <p>เอกสารอธิบายวิธีรับการแจ้งเตือนการบ้านผ่านเบราว์เซอร์ และข้อมูลสำหรับนักพัฒนา</p>
+    </div>
+
+    <div class="stack">
+
+      <!-- For students section -->
+      <div class="card">
+        <div class="card-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          สำหรับนักเรียน / ผู้ใช้งานทั่วไป
+        </div>
+        <div class="step-list">
+          <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <div class="step-title">เข้าหน้า Push Notify</div>
+              <div class="step-desc">
+                กดเมนู <strong>Push Notify</strong> ในแถบนำทาง หรือเข้าที่ <span class="code">/</span> ของ Push Portal<br>
+                <strong>ต้องเปิดผ่าน HTTPS เท่านั้น</strong> — ตรวจสอบว่า URL ขึ้นต้นด้วย <span class="code">https://</span>
+              </div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <div class="step-title">กด "รับการแจ้งเตือนการบ้าน"</div>
+              <div class="step-desc">
+                เบราว์เซอร์จะแสดง Dialog ขออนุญาต กด <strong>Allow / อนุญาต</strong><br>
+                ถ้ากด Block ไปแล้ว → ไปที่ Settings ของเบราว์เซอร์ → Site Settings → Notifications → เปิดสิทธิ์
+              </div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <div class="step-title">เลือกทีมที่ต้องการรับการแจ้งเตือน</div>
+              <div class="step-desc">
+                หลังสมัครสำเร็จ จะมีรายการทีมให้เลือก เลือกทีมที่คุณสังกัดแล้วกด <strong>บันทึกทีมที่เลือก</strong><br>
+                ถ้าไม่เลือกทีมใด = รับการแจ้งเตือนจากทุกทีม
+              </div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">4</div>
+            <div class="step-body">
+              <div class="step-title">รับการแจ้งเตือนอัตโนมัติ</div>
+              <div class="step-desc">
+                เมื่อครูส่งการบ้านใหม่ผ่าน Admin Portal จะมี Notification ขึ้นที่เบราว์เซอร์ทันที แม้คุณจะอยู่หน้าอื่น<br>
+                การแจ้งเตือนทั้งหมดจะถูกบันทึกใน <strong>กล่องแจ้งเตือน</strong> ในหน้า Push Notify
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Browser requirements -->
+      <div class="card">
+        <div class="card-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          ข้อกำหนดของเบราว์เซอร์
+        </div>
+        <table class="info-table">
+          <thead><tr><th>เบราว์เซอร์</th><th>รองรับ?</th><th>หมายเหตุ</th></tr></thead>
+          <tbody>
+            <tr><td>Chrome (Desktop/Android)</td><td style="color:var(--success);">รองรับ</td><td>แนะนำ</td></tr>
+            <tr><td>Firefox</td><td style="color:var(--success);">รองรับ</td><td></td></tr>
+            <tr><td>Edge</td><td style="color:var(--success);">รองรับ</td><td></td></tr>
+            <tr><td>Safari (macOS 16.4+)</td><td style="color:var(--warning);">รองรับบางส่วน</td><td>ต้องเพิ่ม PWA ก่อน</td></tr>
+            <tr><td>Safari iOS</td><td style="color:var(--danger);">ไม่รองรับ</td><td>Apple ยังไม่เปิดให้ Web Push บน iOS</td></tr>
+            <tr><td>LINE In-App Browser</td><td style="color:var(--danger);">ไม่รองรับ</td><td>ต้องเปิดใน Chrome หรือ Safari โดยตรง</td></tr>
+          </tbody>
+        </table>
+        <div class="alert alert-warn" style="margin-top:14px;">
+          Web Push จำเป็นต้องใช้งานผ่าน <strong>HTTPS เท่านั้น</strong><br>
+          การเปิดผ่าน HTTP จะทำให้เบราว์เซอร์ซ่อน Push API ออกทั้งหมด แม้เป็น Chrome ล่าสุด
+        </div>
+      </div>
+
+      <!-- For developers / API reference -->
+      <div class="card">
+        <div class="card-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          API Reference (Internal)
+        </div>
+        <p style="font-size:.83rem;color:var(--ink-secondary);margin-bottom:16px;">
+          Push Portal รันบน Port <span class="code">8082</span> — ทุก API ที่มี <span class="code">X-Push-Secret</span> ต้องการ header ยืนยันตัวตน (ตั้งค่าใน <span class="code">.env</span>)
+        </p>
+        <table class="info-table">
+          <thead><tr><th>Method</th><th>Path</th><th>คำอธิบาย</th><th>Auth?</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><span class="badge badge-get">GET</span></td>
+              <td><span class="code">/</span></td>
+              <td>หน้าสมัครรับการแจ้งเตือน</td>
+              <td class="muted">ไม่ต้อง</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-get">GET</span></td>
+              <td><span class="code">/document</span></td>
+              <td>หน้าคู่มือนี้</td>
+              <td class="muted">ไม่ต้อง</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-get">GET</span></td>
+              <td><span class="code">/api/vapid-public-key</span></td>
+              <td>คืน VAPID Public Key สำหรับ browser subscribe</td>
+              <td class="muted">ไม่ต้อง</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-get">GET</span></td>
+              <td><span class="code">/api/teams</span></td>
+              <td>รายการทีมทั้งหมด (Proxy จาก teamService)</td>
+              <td class="muted">ไม่ต้อง</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-get">GET</span></td>
+              <td><span class="code">/api/subscribers/count</span></td>
+              <td>จำนวน subscription ที่ active อยู่ทั้งหมด</td>
+              <td class="muted">ไม่ต้อง</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-post">POST</span></td>
+              <td><span class="code">/api/subscribe</span></td>
+              <td>บันทึก PushSubscription object + teamIds ที่เลือก</td>
+              <td class="muted">ไม่ต้อง</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-del">DEL</span></td>
+              <td><span class="code">/api/subscribe</span></td>
+              <td>ยกเลิก subscription โดย endpoint</td>
+              <td class="muted">ไม่ต้อง</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-post">POST</span></td>
+              <td><span class="code">/api/push/send</span></td>
+              <td>Broadcast push ไปยัง subscribers ที่ตรงกับ teamId</td>
+              <td style="color:var(--warning);">X-Push-Secret</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style="margin-top:20px;">
+          <p style="font-size:.83rem;color:var(--muted);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;">ตัวอย่าง POST /api/push/send</p>
+          <div class="code-block">POST /api/push/send HTTP/1.1
+X-Push-Secret: &lt;PUSH_SECRET จาก .env&gt;
+Content-Type: application/json
+
+{
+  "title": "การบ้านใหม่: คณิตศาสตร์ - แบบฝึกหัด 5",
+  "body": "กำหนดส่ง: 22 มิ.ย. 2569",
+  "url": "https://hwnotify.example.com/homework",
+  "teamId": "c2869774-7f24-441a-b317-01277df5d7fb"
+}</div>
+        </div>
+      </div>
+
+      <!-- Architecture -->
+      <div class="card">
+        <div class="card-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          สถาปัตยกรรมของระบบ
+        </div>
+        <table class="info-table">
+          <thead><tr><th>Service</th><th>Port</th><th>หน้าที่</th><th>Entry File</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>Admin Portal</td>
+              <td><span class="code">8080</span></td>
+              <td>Dashboard ครู, จัดการการบ้าน, ส่ง LINE</td>
+              <td><span class="code">src/server.js</span></td>
+            </tr>
+            <tr>
+              <td>Student Portal</td>
+              <td><span class="code">8081</span></td>
+              <td>ฟอร์มยื่นงานใหม่ (Pending Approval)</td>
+              <td><span class="code">student-portal/server.js</span></td>
+            </tr>
+            <tr>
+              <td>Push Portal</td>
+              <td><span class="code">8082</span></td>
+              <td>Web Push Notifications (ตัวนี้)</td>
+              <td><span class="code">push-portal/server.js</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="alert alert-info" style="margin-top:14px;">
+          เมื่อ Admin กดส่งการบ้าน → Admin Portal จะเรียก LINE API <strong>และ</strong> Push Portal พร้อมกัน (fire-and-forget)<br>
+          หาก LINE ติด Monthly Limit → Push Notification ยังส่งได้ตามปกติ เพราะทำงานแยกกันอิสระ
+        </div>
+      </div>
+
+      <!-- Structure -->
+      <div class="card">
+        <div class="card-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          โครงสร้างไฟล์ push-portal
+        </div>
+        <div class="code-block">push-portal/
+├── server.js                   # Entry point (Port 8082)
+├── routes/
+│   ├── pages.js                # HTML page routes (/, /document)
+│   ├── subscribe.js            # Subscribe/Unsubscribe API
+│   └── push.js                 # Internal broadcast endpoint
+├── services/
+│   ├── subscriptionService.js  # Read/Write push_subscriptions.json
+│   └── pushService.js          # Broadcast logic via web-push
+└── views/
+    ├── index.html              # หน้าสมัครรับการแจ้งเตือน
+    ├── document.html           # หน้านี้
+    └── sw.js                   # Service Worker</div>
+      </div>
+
+    </div><!-- end stack -->
+  </main>
+</div>
+
+<!-- Theme Modal -->
+<div class="modal-overlay" id="themeModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Appearance</h2>
+      <button class="modal-close" onclick="document.getElementById('themeModal').classList.remove('show')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div style="margin-bottom:20px;">
+        <label style="display:block;margin-bottom:8px;font-weight:600;font-size:.85rem;color:var(--muted);">MODE</label>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-theme-mode" data-mode="system">System</button>
+          <button class="btn-theme-mode" data-mode="light">Light</button>
+          <button class="btn-theme-mode" data-mode="dark">Dark</button>
+        </div>
+      </div>
+      <div>
+        <label style="display:block;margin-bottom:8px;font-weight:600;font-size:.85rem;color:var(--muted);">COLOR</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn-theme-color" data-color="indigo" style="background:#6366f1;"></button>
+          <button class="btn-theme-color" data-color="blue"   style="background:#3b82f6;"></button>
+          <button class="btn-theme-color" data-color="emerald" style="background:#10b981;"></button>
+          <button class="btn-theme-color" data-color="amber"  style="background:#f59e0b;"></button>
+          <button class="btn-theme-color" data-color="rose"   style="background:#f43f5e;"></button>
+          <button class="btn-theme-color" data-color="violet" style="background:#8b5cf6;"></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function openMain(p='/'){window.open(location.protocol+'//'+location.hostname+':8080'+p,'_blank');}
+function getTheme(){var m=localStorage.getItem('theme-mode');if(!m||m==='system')m=window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';return m;}
+function getColor(){return localStorage.getItem('theme-color')||'indigo';}
+function applyTheme(){document.documentElement.setAttribute('data-theme',getTheme());document.documentElement.setAttribute('data-color',getColor());}
+window.setThemeMode=function(m){localStorage.setItem('theme-mode',m);applyTheme();updateThemeUI();};
+window.setThemeColor=function(c){localStorage.setItem('theme-color',c);applyTheme();updateThemeUI();};
+window.updateThemeUI=function(){
+  var cm=localStorage.getItem('theme-mode')||'system',cc=getColor();
+  document.querySelectorAll('.btn-theme-mode').forEach(b=>{
+    var a=b.dataset.mode===cm;b.style.background=a?'var(--primary)':'var(--bg)';b.style.color=a?'#fff':'var(--ink)';b.style.borderColor=a?'var(--primary)':'var(--border)';
+  });
+  document.querySelectorAll('.btn-theme-color').forEach(b=>{
+    var a=b.dataset.color===cc;b.style.transform=a?'scale(1.2)':'scale(1)';b.style.boxShadow=a?'0 0 0 2px var(--bg-sidebar),0 0 0 4px var(--primary)':'none';
+  });
+};
+document.getElementById('themeToggleBtn').addEventListener('click',()=>{document.getElementById('themeModal').classList.add('show');updateThemeUI();});
+document.getElementById('themeModal').addEventListener('click',e=>{if(e.target===document.getElementById('themeModal'))document.getElementById('themeModal').classList.remove('show');});
+document.querySelectorAll('.btn-theme-mode').forEach(b=>b.addEventListener('click',()=>window.setThemeMode(b.dataset.mode)));
+document.querySelectorAll('.btn-theme-color').forEach(b=>b.addEventListener('click',()=>window.setThemeColor(b.dataset.color)));
+window.matchMedia('(prefers-color-scheme: light)').addEventListener('change',e=>{if(!localStorage.getItem('theme-mode')||localStorage.getItem('theme-mode')==='system')document.documentElement.setAttribute('data-theme',e.matches?'light':'dark');});
+</script>
+</body>
+</html>
